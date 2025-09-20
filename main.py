@@ -11,6 +11,7 @@ from pathlib import Path
 from services.image_verifier import ImageVerifier
 from services.video_verifier import VideoVerifier
 from services.input_processor import InputProcessor
+from services.text_fact_checker import TextFactChecker
 from utils.file_utils import save_upload_file, cleanup_temp_files
 
 app = FastAPI(
@@ -37,6 +38,7 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 image_verifier = ImageVerifier()
 video_verifier = VideoVerifier()
 input_processor = InputProcessor()
+text_fact_checker = TextFactChecker()
 
 @app.get("/")
 async def root():
@@ -114,6 +116,28 @@ async def verify_video(
             cleanup_temp_files([temp_file_path])
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/verify/text")
+async def verify_text(
+    text_input: str = Form(...),
+    claim_context: str = Form("Unknown context"),
+    claim_date: str = Form("Unknown date")
+):
+    """
+    Verify a textual claim using Google's Fact Check Tools API
+    """
+    try:
+        # Verify text claim
+        result = await text_fact_checker.verify(
+            text_input=text_input,
+            claim_context=claim_context,
+            claim_date=claim_date
+        )
+        
+        return result
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/chatbot/verify")
 async def chatbot_verify(
     text_input: Optional[str] = Form(None),
@@ -139,6 +163,16 @@ async def chatbot_verify(
         
         results = []
         temp_files_to_cleanup = []
+        
+        # Handle text-only verification
+        if verification_type == "text" and content.get("text"):
+            result = await text_fact_checker.verify(
+                text_input=content["text"],
+                claim_context=claim_context,
+                claim_date=claim_date
+            )
+            result["source"] = "text_input"
+            results.append(result)
         
         # Process files if any
         for file_path in content["files"]:
@@ -229,7 +263,8 @@ async def chatbot_verify(
 def _aggregate_verdicts(results: List[Dict]) -> str:
     """Aggregate individual verification results into overall verdict.
 
-    Supports both image results (with 'verdict') and video results (with details.overall_verdict).
+    Supports image results (with 'verdict'), video results (with details.overall_verdict), 
+    and text results (with 'verdict').
     """
     if not results:
         return "no_content"

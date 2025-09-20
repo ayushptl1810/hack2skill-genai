@@ -15,6 +15,11 @@ class Config:
     GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.1"))
     GEMINI_TOP_P: float = float(os.getenv("GEMINI_TOP_P", "0.8"))
     GEMINI_MAX_TOKENS: int = int(os.getenv("GEMINI_MAX_TOKENS", "1000000"))
+    
+    # Google Custom Search API Configuration (replaces deprecated Fact Check Tools API)
+    GOOGLE_FACT_CHECK_API_KEY: Optional[str] = os.getenv("GOOGLE_FACT_CHECK_API_KEY")
+    GOOGLE_FACT_CHECK_CX: Optional[str] = os.getenv("GOOGLE_FACT_CHECK_CX")
+    
     # Low-priority (social/UGC) domains to downrank (override via LOW_PRIORITY_DOMAINS)
     LOW_PRIORITY_DOMAINS: set = set((os.getenv(
         "LOW_PRIORITY_DOMAINS",
@@ -80,6 +85,14 @@ class Config:
         """Validate configuration values"""
         if not cls.SERP_API_KEY:
             print("Warning: SERP_API_KEY not set. Service will not function without it.")
+            return False
+        
+        if not cls.GOOGLE_FACT_CHECK_API_KEY:
+            print("Warning: GOOGLE_FACT_CHECK_API_KEY not set. Text fact-checking will not function without it.")
+            return False
+        
+        if not cls.GOOGLE_FACT_CHECK_CX:
+            print("Warning: GOOGLE_FACT_CHECK_CX not set. Text fact-checking will not function without it.")
             return False
         
         if cls.MAX_FILE_SIZE <= 0:

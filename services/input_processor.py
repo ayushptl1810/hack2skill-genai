@@ -29,15 +29,16 @@ Your task is to analyze user input and extract:
 1. Image/video content (files, URLs, or descriptions)
 2. Claim context (what the user is claiming)
 3. Claim date (when the claim was made)
-4. Type of verification needed (image or video)
+4. Type of verification needed (image, video, or text)
 
 Return a JSON response with this structure:
 {
-    "verification_type": "image" or "video",
+    "verification_type": "image" or "video" or "text",
     "content": {
         "files": ["list of file paths if files provided"],
         "urls": ["list of image/video URLs"],
-        "descriptions": ["list of text descriptions"]
+        "descriptions": ["list of text descriptions"],
+        "text": "the text claim to verify (if verification_type is text)"
     },
     "claim_context": "extracted or inferred claim context",
     "claim_date": "extracted or inferred date"
