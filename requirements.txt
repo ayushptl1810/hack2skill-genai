@@ -1,0 +1,10 @@
+requests
+pillow
+opencv-python
+fastapi
+uvicorn
+serpapi
+python-dotenv
+python-multipart
+yt-dlp
+google-generativeai
