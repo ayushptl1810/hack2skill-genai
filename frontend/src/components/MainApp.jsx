@@ -5,13 +5,8 @@ import { BookOpen, Shield, AlertTriangle, Target, Brain } from "lucide-react";
 // Import all the components
 import SidebarHeader from "./sections/SidebarHeader";
 import SidebarNavigation from "./sections/SidebarNavigation";
-import ProgressSummary from "./sections/ProgressSummary";
+import CurrentRumours from "./sections/CurrentRumours";
 import PageHeader from "./sections/PageHeader";
-import ModuleHeader from "./sections/ModuleHeader";
-import ModulesGrid from "./sections/ModulesGrid";
-import ContentSections from "./sections/ContentSections";
-import ProgressOverview from "./sections/ProgressOverview";
-import PracticalTips from "./ui/PracticalTips";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ViewContainer from "./ViewContainer";
 
@@ -240,12 +235,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
           />
         )}
 
-        {sidebarOpen && (
-          <ProgressSummary
-            userProgress={userProgress}
-            isDarkMode={isDarkMode}
-          />
-        )}
+        {sidebarOpen && <CurrentRumours isDarkMode={isDarkMode} />}
       </motion.div>
 
       {/* Main Content */}

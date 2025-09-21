@@ -33,7 +33,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
     if (!inputValue.trim() && uploadedFiles.length === 0) return;
 
     const userMessage = {
-      id: Date.now(),
+      id: `user-${Date.now()}-${Math.random()}`,
       type: "user",
       content: inputValue,
       timestamp: new Date(),
@@ -46,15 +46,24 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
     setIsLoading(true);
 
     try {
+      // Create FormData to match backend expectations
+      const formData = new FormData();
+
+      // Add text input if provided
+      if (inputValue.trim()) {
+        formData.append("text_input", inputValue.trim());
+      }
+
+      // Add files if provided
+      if (uploadedFiles.length > 0) {
+        uploadedFiles.forEach((file) => {
+          formData.append("files", file);
+        });
+      }
+
       const response = await fetch("http://127.0.0.1:8000/chatbot/verify", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: inputValue,
-          files: uploadedFiles,
-        }),
+        body: formData, // Send FormData instead of JSON
       });
 
       if (!response.ok) {
@@ -64,10 +73,16 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
       const result = await response.json();
       console.log("Verification result:", result);
 
+      // Check if backend returned an error
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
       const aiMessage = {
-        id: Date.now() + 1,
+        id: `ai-${Date.now()}-${Math.random()}`,
         type: "ai",
-        content: result.verification_result || "Analysis complete",
+        content:
+          result.message || result.verification_result || "Analysis complete",
         timestamp: new Date(),
         sources: result.sources || [],
         confidence: result.confidence,
@@ -76,9 +91,9 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
 
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Main error:", error);
       const errorMessage = {
-        id: Date.now() + 1,
+        id: `error-${Date.now()}-${Math.random()}`,
         type: "ai",
         content:
           "Sorry, I encountered an error while verifying your claim. Please try again.",
