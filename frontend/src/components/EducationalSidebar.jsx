@@ -1,23 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
 import {
   BookOpen,
   Shield,
   AlertTriangle,
   CheckCircle,
-  Play,
   Trophy,
   Clock,
   ChevronRight,
   ChevronDown,
   Lightbulb,
   Target,
-  Users,
   ExternalLink,
 } from "lucide-react";
 
-const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
+const EducationalSidebar = ({
+  isDarkMode,
+  verificationResult,
+  onLearnClick,
+}) => {
   const [modules, setModules] = useState([]);
   const [selectedModule, setSelectedModule] = useState(null);
   const [moduleContent, setModuleContent] = useState(null);
@@ -149,11 +150,19 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
   };
 
   const completeModule = (moduleId) => {
-    setUserProgress((prev) => ({
-      ...prev,
-      completedModules: [...prev.completedModules, moduleId],
-      points: prev.points + 10,
-    }));
+    setUserProgress((prev) => {
+      // Check if module is already completed
+      if (prev.completedModules.includes(moduleId)) {
+        return prev; // Return unchanged state if already completed
+      }
+
+      // Add module to completed list and award points
+      return {
+        ...prev,
+        completedModules: [...prev.completedModules, moduleId],
+        points: prev.points + 10,
+      };
+    });
   };
 
   return (
@@ -187,66 +196,129 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
             Your Progress
           </motion.h3>
           <div className="space-y-3">
-            <div
+            <motion.div
               className={`flex items-center justify-between p-3 rounded-lg ${
                 isDarkMode ? "bg-yellow-900" : "bg-yellow-50"
               }`}
+              animate={{
+                backgroundColor: isDarkMode ? "#78350f" : "#fefce8",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
-              <span
+              <motion.span
                 className={`text-sm font-medium ${
                   isDarkMode ? "text-yellow-200" : "text-yellow-800"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#fde68a" : "#92400e",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 Points
-              </span>
-              <span
+              </motion.span>
+              <motion.span
                 className={`text-lg font-bold ${
                   isDarkMode ? "text-yellow-400" : "text-yellow-600"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#fbbf24" : "#d97706",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 {userProgress.points}
-              </span>
-            </div>
-            <div
+              </motion.span>
+            </motion.div>
+            <motion.div
               className={`flex items-center justify-between p-3 rounded-lg ${
                 isDarkMode ? "bg-blue-900" : "bg-blue-50"
               }`}
+              animate={{
+                backgroundColor: isDarkMode ? "#1e3a8a" : "#eff6ff",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
-              <span
+              <motion.span
                 className={`text-sm font-medium ${
                   isDarkMode ? "text-blue-200" : "text-blue-800"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#bfdbfe" : "#1e40af",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 Level
-              </span>
-              <span
+              </motion.span>
+              <motion.span
                 className={`text-lg font-bold ${
                   isDarkMode ? "text-blue-400" : "text-blue-600"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#60a5fa" : "#2563eb",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 {userProgress.level}
-              </span>
-            </div>
-            <div
+              </motion.span>
+            </motion.div>
+            <motion.div
               className={`flex items-center justify-between p-3 rounded-lg ${
                 isDarkMode ? "bg-green-900" : "bg-green-50"
               }`}
+              animate={{
+                backgroundColor: isDarkMode ? "#14532d" : "#f0fdf4",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
-              <span
+              <motion.span
                 className={`text-sm font-medium ${
                   isDarkMode ? "text-green-200" : "text-green-800"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#bbf7d0" : "#166534",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 Streak
-              </span>
-              <span
+              </motion.span>
+              <motion.span
                 className={`text-lg font-bold ${
                   isDarkMode ? "text-green-400" : "text-green-600"
                 }`}
+                animate={{
+                  color: isDarkMode ? "#4ade80" : "#16a34a",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 {userProgress.streak} days
-              </span>
-            </div>
+              </motion.span>
+            </motion.div>
           </div>
         </div>
 
@@ -267,29 +339,41 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
           </motion.h3>
 
           {/* Link to full educational page */}
-          <Link
-            to="/learn"
-            className={`w-full mb-4 p-3 rounded-lg transition-colors flex items-center justify-between ${
-              isDarkMode
-                ? "bg-blue-900 text-blue-200 hover:bg-blue-800"
-                : "bg-blue-50 text-blue-700 hover:bg-blue-100"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <ExternalLink className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                Full Learning Experience
-              </span>
-            </div>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
+          <button onClick={onLearnClick}>
+            <motion.div
+              className={`w-full mb-4 p-3 rounded-lg flex items-center justify-between ${
+                isDarkMode
+                  ? "bg-blue-900 text-blue-200 hover:bg-blue-800"
+                  : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+              }`}
+              animate={{
+                backgroundColor: isDarkMode ? "#1e3a8a" : "#eff6ff",
+                color: isDarkMode ? "#bfdbfe" : "#1e40af",
+              }}
+              whileHover={{
+                backgroundColor: isDarkMode ? "#1e40af" : "#dbeafe",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <ExternalLink className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  Full Learning Experience
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+          </button>
 
           <div className="space-y-2">
             {modules.map((module) => (
               <motion.button
                 key={module.id}
                 onClick={() => loadModuleContent(module.id, userProgress.level)}
-                className={`w-full p-3 rounded-lg transition-colors flex items-center justify-between ${
+                className={`w-full p-3 rounded-lg flex items-center justify-between ${
                   isDarkMode
                     ? "bg-gray-700 hover:bg-gray-600 text-white"
                     : "bg-gray-50 hover:bg-gray-100 text-gray-900"
@@ -298,8 +382,19 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
                     ? "border-l-4 border-green-500"
                     : ""
                 }`}
-                whileHover={{ scale: 1.02 }}
+                animate={{
+                  backgroundColor: isDarkMode ? "#374151" : "#f9fafb",
+                  color: isDarkMode ? "#ffffff" : "#111827",
+                }}
+                whileHover={{
+                  backgroundColor: isDarkMode ? "#4b5563" : "#f3f4f6",
+                  scale: 1.02,
+                }}
                 whileTap={{ scale: 0.98 }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 <div className="flex items-center space-x-2">
                   {module.id === "red_flags" && (
@@ -447,25 +542,39 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
 
               {moduleContent.content_sections?.map((section, index) => (
                 <div key={index} className="mb-4">
-                  <button
+                  <motion.button
                     onClick={() => toggleSection(`section-${index}`)}
-                    className={`w-full flex items-center justify-between p-2 rounded ${
-                      isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                    }`}
+                    className={`w-full flex items-center justify-between p-2 rounded`}
+                    animate={{
+                      backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
                   >
-                    <h5
+                    <motion.h5
                       className={`text-sm font-medium ${
                         isDarkMode ? "text-white" : "text-gray-900"
                       }`}
+                      animate={{
+                        color: isDarkMode ? "#ffffff" : "#111827",
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: "easeInOut",
+                      }}
                     >
                       {section.title}
-                    </h5>
-                    {expandedSections[`section-${index}`] ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
+                    </motion.h5>
+                    <motion.div
+                      animate={{
+                        color: isDarkMode ? "#9ca3af" : "#6b7280",
+                        rotate: expandedSections[`section-${index}`] ? 90 : 0,
+                      }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                    >
                       <ChevronRight className="w-4 h-4" />
-                    )}
-                  </button>
+                    </motion.div>
+                  </motion.button>
 
                   <AnimatePresence>
                     {expandedSections[`section-${index}`] && (
@@ -473,6 +582,7 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
                         className="mt-2 pl-4"
                       >
                         <p
@@ -513,7 +623,7 @@ const EducationalSidebar = ({ isDarkMode, verificationResult }) => {
 
               <motion.button
                 onClick={() => completeModule(selectedModule)}
-                className={`w-full p-2 rounded-lg transition-colors ${
+                className={`w-full p-2 rounded-lg transition-all duration-600 ${
                   isDarkMode
                     ? "bg-green-900 text-green-200 hover:bg-green-800"
                     : "bg-green-50 text-green-700 hover:bg-green-100"

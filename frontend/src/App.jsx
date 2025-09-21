@@ -1,36 +1,25 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-import Chatbot from "./pages/Chatbot";
-import EducationalPage from "./pages/EducationalPage";
-import Navigation from "./components/Navigation";
+import { useState, useEffect } from "react";
+import MainApp from "./components/MainApp";
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Initialize from localStorage or default to false
+    const saved = localStorage.getItem("isDarkMode");
+    return saved ? JSON.parse(saved) : false;
+  });
 
-  return (
-    <Router>
-      <div className="relative">
-        <Navigation isDarkMode={isDarkMode} />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Chatbot isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
-            }
-          />
-          <Route
-            path="/learn"
-            element={
-              <EducationalPage
-                isDarkMode={isDarkMode}
-                setIsDarkMode={setIsDarkMode}
-              />
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
-  );
+  // Save to localStorage whenever dark mode changes
+  useEffect(() => {
+    localStorage.setItem("isDarkMode", JSON.stringify(isDarkMode));
+    // Also set the dark class on the document element for Tailwind CSS
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  return <MainApp isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
 }
 
 export default App;

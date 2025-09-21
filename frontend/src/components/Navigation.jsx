@@ -26,7 +26,7 @@ const Navigation = ({ isDarkMode }) => {
         isDarkMode ? "bg-gray-800" : "bg-white"
       } rounded-full shadow-lg border ${
         isDarkMode ? "border-gray-700" : "border-gray-200"
-      } px-6 py-3`}
+      } px-6 py-3 backdrop-blur-sm bg-opacity-95`}
       animate={{
         backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
       }}
@@ -44,7 +44,7 @@ const Navigation = ({ isDarkMode }) => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-600 ${
                 isActive
                   ? isDarkMode
                     ? "bg-blue-600 text-white"
