@@ -153,10 +153,15 @@ const CurrentRumours = ({ isDarkMode }) => {
     console.error("❌ WebSocket error:", error);
   }, []);
 
-  // Initialize WebSocket connection
-  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+  // Get the base URLs from environment variables
+  const VITE_API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
+  const wsProtocol = VITE_API_BASE_URL.startsWith("https") ? "wss" : "ws";
+  const wsHost = VITE_API_BASE_URL.replace(/^https?:\/\//, "");
+  const wsUrl = `${wsProtocol}://${wsHost}/ws`;
+
+  // Initialize WebSocket connection
   const {
     isConnected,
     error: wsError,
@@ -175,7 +180,7 @@ const CurrentRumours = ({ isDarkMode }) => {
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = "/mongodb/recent-posts?limit=5";
+      const apiUrl = `${VITE_API_BASE_URL}/mongodb/recent-posts?limit=5`;
       console.log("🔍 DEBUG: Making request to:", apiUrl);
 
       const response = await fetch(apiUrl);
