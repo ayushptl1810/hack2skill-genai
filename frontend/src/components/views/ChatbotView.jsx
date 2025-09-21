@@ -61,7 +61,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
         });
       }
 
-      const response = await fetch("http://127.0.0.1:8000/chatbot/verify", {
+      const response = await fetch("/chatbot/verify", {
         method: "POST",
         body: formData, // Send FormData instead of JSON
       });

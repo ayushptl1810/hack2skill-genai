@@ -154,11 +154,14 @@ const CurrentRumours = ({ isDarkMode }) => {
   }, []);
 
   // Initialize WebSocket connection
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+
   const {
     isConnected,
     error: wsError,
     reconnect,
-  } = useWebSocket("ws://127.0.0.1:8000/ws", {
+  } = useWebSocket(wsUrl, {
     onOpen: handleWebSocketOpen,
     onClose: handleWebSocketClose,
     onMessage: handleWebSocketMessage,
@@ -172,7 +175,7 @@ const CurrentRumours = ({ isDarkMode }) => {
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = "http://127.0.0.1:8000/mongodb/recent-posts?limit=5";
+      const apiUrl = "/mongodb/recent-posts?limit=5";
       console.log("🔍 DEBUG: Making request to:", apiUrl);
 
       const response = await fetch(apiUrl);
