@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import MotionText from "./MotionText";
+import MotionCard from "./MotionCard";
 import { Clock } from "lucide-react";
 
 const RumourCard = ({ post, isDarkMode, onClick }) => {
@@ -60,25 +61,18 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
   const verdictStyling = getVerdictStyling(post.verification.verdict);
 
   return (
-    <motion.div
-      className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
-        isDarkMode
-          ? "bg-gray-800 border-gray-700 hover:bg-gray-750"
-          : "bg-white border-gray-200 hover:bg-gray-50"
-      }`}
-      animate={{
-        backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-        borderColor: isDarkMode ? "#374151" : "#e5e7eb",
-      }}
+    <MotionCard
+      className="p-4 rounded-lg border cursor-pointer"
+      isDarkMode={isDarkMode}
+      darkBackgroundColor="#1f2937"
+      lightBackgroundColor="#ffffff"
+      darkBorderColor="#374151"
+      lightBorderColor="#e5e7eb"
       whileHover={{
         backgroundColor: isDarkMode ? "#374151" : "#f9fafb",
         scale: 1.02,
       }}
       whileTap={{ scale: 0.98 }}
-      transition={{
-        duration: 0.2,
-        ease: "easeInOut",
-      }}
       onClick={onClick}
     >
       {/* Claim Text */}
@@ -127,7 +121,10 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
               ? "#fde68a"
               : "#92400e",
           }}
-          transition={{ duration: 0.2 }}
+          transition={{
+            duration: 0.6,
+            ease: "easeInOut",
+          }}
         >
           {post.verification.verdict}
         </motion.span>
@@ -148,7 +145,7 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
           </MotionText>
         </div>
       </div>
-    </motion.div>
+    </MotionCard>
   );
 };
 

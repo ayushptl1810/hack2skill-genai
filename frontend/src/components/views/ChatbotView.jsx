@@ -159,14 +159,22 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               }`}
             >
               {/* Avatar */}
-              <div
+              <motion.div
                 className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  message.type === "user"
-                    ? "bg-blue-500"
-                    : isDarkMode
-                    ? "bg-gray-700"
-                    : "bg-gray-200"
+                  message.type === "user" ? "bg-blue-500" : ""
                 }`}
+                animate={{
+                  backgroundColor:
+                    message.type === "user"
+                      ? "#3b82f6"
+                      : isDarkMode
+                      ? "#374151"
+                      : "#e5e7eb",
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
               >
                 {message.type === "user" ? (
                   <div className="text-white font-bold text-sm">U</div>
@@ -177,7 +185,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                     }`}
                   />
                 )}
-              </div>
+              </motion.div>
 
               {/* Message Bubble */}
               <div
@@ -185,16 +193,39 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                   message.type === "user" ? "text-right" : "text-left"
                 }`}
               >
-                <div
+                <motion.div
                   className={`px-4 py-3 rounded-lg ${
-                    message.type === "user"
-                      ? isDarkMode
-                        ? "bg-blue-600 text-white"
-                        : "bg-blue-500 text-white"
-                      : isDarkMode
-                      ? "bg-gray-800 border border-gray-700 text-white"
-                      : "bg-white border border-gray-200 text-gray-900"
+                    message.type === "user" ? "text-white" : ""
                   }`}
+                  animate={{
+                    backgroundColor:
+                      message.type === "user"
+                        ? isDarkMode
+                          ? "#2563eb"
+                          : "#3b82f6"
+                        : isDarkMode
+                        ? "#1f2937"
+                        : "#ffffff",
+                    borderColor:
+                      message.type === "user"
+                        ? "transparent"
+                        : isDarkMode
+                        ? "#374151"
+                        : "#e5e7eb",
+                    color:
+                      message.type === "user"
+                        ? "#ffffff"
+                        : isDarkMode
+                        ? "#ffffff"
+                        : "#111827",
+                  }}
+                  style={{
+                    border: message.type === "user" ? "none" : "1px solid",
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    ease: "easeInOut",
+                  }}
                 >
                   <p className="text-sm">{message.content}</p>
 
@@ -215,7 +246,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                       </ul>
                     </div>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Arrow */}
                 <div
@@ -360,48 +391,83 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               onChange={handleFileUpload}
               className="hidden"
             />
-            <label
+            <motion.label
               htmlFor="file-upload"
-              className={`p-2 rounded-lg transition-all duration-600 cursor-pointer ${
-                isDarkMode
-                  ? "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-              }`}
+              className="p-2 rounded-lg cursor-pointer"
+              animate={{
+                color: isDarkMode ? "#9ca3af" : "#6b7280",
+                backgroundColor: "transparent",
+              }}
+              whileHover={{
+                color: isDarkMode ? "#d1d5db" : "#374151",
+                backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
               <Upload className="w-5 h-5" />
-            </label>
-            <button
-              className={`p-2 rounded-lg transition-all duration-600 ${
-                isDarkMode
-                  ? "text-gray-400 hover:text-gray-300 hover:bg-gray-700"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-              }`}
+            </motion.label>
+            <motion.button
+              className="p-2 rounded-lg"
+              animate={{
+                color: isDarkMode ? "#9ca3af" : "#6b7280",
+                backgroundColor: "transparent",
+              }}
+              whileHover={{
+                color: isDarkMode ? "#d1d5db" : "#374151",
+                backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
               <Mic className="w-5 h-5" />
-            </button>
+            </motion.button>
           </div>
-          <input
+          <motion.input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask me to verify something..."
-            className={`flex-1 px-4 py-2 rounded-lg border ${
-              isDarkMode
-                ? "bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDarkMode ? "placeholder-gray-400" : "placeholder-gray-500"
+            }`}
+            animate={{
+              backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
+              borderColor: isDarkMode ? "#374151" : "#d1d5db",
+              color: isDarkMode ? "#ffffff" : "#111827",
+            }}
+            transition={{
+              duration: 0.6,
+              ease: "easeInOut",
+            }}
           />
-          <button
+          <motion.button
             onClick={handleSendMessage}
             disabled={
               (!inputValue.trim() && uploadedFiles.length === 0) || isLoading
             }
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-600 flex items-center space-x-2"
+            className="px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            animate={{
+              backgroundColor: "#3b82f6",
+            }}
+            whileHover={{
+              backgroundColor: "#2563eb",
+              scale: 1.02,
+            }}
+            whileTap={{ scale: 0.98 }}
+            transition={{
+              duration: 0.6,
+              ease: "easeInOut",
+            }}
           >
             <Send className="w-4 h-4" />
             <span>Send</span>
-          </button>
+          </motion.button>
         </div>
       </motion.div>
     </motion.div>

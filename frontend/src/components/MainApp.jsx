@@ -219,7 +219,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
         }}
       >
         <SidebarHeader
-          title="Learn"
+          title="Project Aegis"
           subtitle="Misinformation Detection"
           isDarkMode={isDarkMode}
           sidebarOpen={sidebarOpen}

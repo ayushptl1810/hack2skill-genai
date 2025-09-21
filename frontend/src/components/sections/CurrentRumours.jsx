@@ -50,15 +50,29 @@ const CurrentRumours = ({ isDarkMode }) => {
         </div>
 
         {/* Scrollable Rumours List */}
-        <div className="max-h-135 overflow-y-auto space-y-3 pr-1">
+        <motion.div
+          className="max-h-135 overflow-y-auto space-y-3 pr-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+        >
           {rumours.length > 0 ? (
             rumours.map((rumour, index) => (
-              <RumourCard
+              <motion.div
                 key={index}
-                post={rumour}
-                isDarkMode={isDarkMode}
-                onClick={() => handleRumourClick(rumour)}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                }}
+              >
+                <RumourCard
+                  post={rumour}
+                  isDarkMode={isDarkMode}
+                  onClick={() => handleRumourClick(rumour)}
+                />
+              </motion.div>
             ))
           ) : (
             <motion.div
@@ -67,7 +81,10 @@ const CurrentRumours = ({ isDarkMode }) => {
               }`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
             >
               <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <MotionText
@@ -80,7 +97,7 @@ const CurrentRumours = ({ isDarkMode }) => {
               </MotionText>
             </motion.div>
           )}
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Modal */}

@@ -254,7 +254,16 @@ async def chatbot_verify(
             final_message = best_msg.strip()
         else:
             final_message = f"{prefix} {best_msg}" if best_msg else prefix
-        return {"message": final_message}
+        return {
+            "message": final_message,
+            "verdict": overall,
+            "details": {
+                "results": results,
+                "verification_type": verification_type,
+                "claim_context": claim_context,
+                "claim_date": claim_date
+            }
+        }
             
     except Exception as e:
         # Clean up any temp files on error
