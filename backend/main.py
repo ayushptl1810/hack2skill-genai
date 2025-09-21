@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, WebSocket, WebSocketDisconnect
 from typing import Optional, List, Dict, Any
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,12 +7,17 @@ import uvicorn
 import os
 import tempfile
 from pathlib import Path
+import asyncio
+import logging
+import json
 
 from services.image_verifier import ImageVerifier
 from services.video_verifier import VideoVerifier
 from services.input_processor import InputProcessor
 from services.text_fact_checker import TextFactChecker
 from services.educational_content_generator import EducationalContentGenerator
+from services.mongodb_service import MongoDBService
+from services.websocket_service import connection_manager, initialize_mongodb_change_stream, cleanup_mongodb_change_stream
 from utils.file_utils import save_upload_file, cleanup_temp_files
 
 app = FastAPI(
@@ -20,6 +25,10 @@ app = FastAPI(
     description="A service to verify images/videos and generate visual counter-measures",
     version="1.0.0"
 )
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Add CORS middleware
 app.add_middleware(
@@ -35,12 +44,76 @@ import os
 os.makedirs("public/frames", exist_ok=True)
 app.mount("/static", StaticFiles(directory="public"), name="static")
 
+
 # Initialize verifiers and input processor
 image_verifier = ImageVerifier()
 video_verifier = VideoVerifier()
 input_processor = InputProcessor()
 text_fact_checker = TextFactChecker()
 educational_generator = EducationalContentGenerator()
+
+# Initialize MongoDB service
+mongodb_service = None
+try:
+    mongodb_service = MongoDBService()
+except Exception as e:
+    print(f"Warning: MongoDB service initialization failed: {e}")
+
+# Initialize MongoDB change service (will be set in startup event)
+mongodb_change_service = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    global mongodb_change_service
+    try:
+        mongodb_change_service = await initialize_mongodb_change_stream()
+        logger.info("✅ All services initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize services: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup services on shutdown"""
+    try:
+        await cleanup_mongodb_change_stream()
+        logger.info("🧹 All services cleaned up successfully")
+    except Exception as e:
+        logger.error(f"❌ Error during cleanup: {e}")
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await connection_manager.connect(websocket, {"connected_at": asyncio.get_event_loop().time()})
+    logger.info(f"✅ WebSocket client connected. Total connections: {len(connection_manager.active_connections)}")
+    
+    try:
+        while True:
+            try:
+                # Wait for incoming messages with a timeout
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                
+                # Echo back a response (optional)
+                await connection_manager.send_personal_message(
+                    json.dumps({"type": "pong", "message": "Connection active"}), 
+                    websocket
+                )
+            except asyncio.TimeoutError:
+                # Send a ping to keep connection alive
+                await connection_manager.send_personal_message(
+                    json.dumps({"type": "ping", "message": "Keep alive"}), 
+                    websocket
+                )
+            except Exception as e:
+                logger.error(f"❌ Error in WebSocket message handling: {e}")
+                break
+                
+    except WebSocketDisconnect:
+        logger.info("🔌 WebSocket client disconnected normally")
+        connection_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"❌ WebSocket error: {e}")
+        connection_manager.disconnect(websocket)
 
 @app.get("/")
 async def root():
@@ -306,9 +379,56 @@ def _aggregate_verdicts(results: List[Dict]) -> str:
     
     return "mixed"
 
+@app.get("/mongodb/recent-posts")
+async def get_recent_debunk_posts(limit: int = 5):
+    """
+    Get recent debunk posts from MongoDB
+    
+    Args:
+        limit: Maximum number of posts to return (default: 5)
+        
+    Returns:
+        List of recent debunk posts
+    """
+    try:
+        print(f"🔍 DEBUG: Endpoint called with limit={limit}")
+        print(f"🔍 DEBUG: MongoDB service available: {mongodb_service is not None}")
+        
+        if not mongodb_service:
+            print("❌ DEBUG: MongoDB service is None!")
+            raise HTTPException(
+                status_code=503, 
+                detail="MongoDB service is not available. Check MONGO_CONNECTION_STRING environment variable."
+            )
+        
+        print("🔍 DEBUG: Calling mongodb_service.get_recent_posts()")
+        posts = mongodb_service.get_recent_posts(limit)
+        print(f"🔍 DEBUG: Service returned {len(posts)} posts")
+        
+        if posts:
+            print(f"🔍 DEBUG: First post keys: {list(posts[0].keys())}")
+            print(f"🔍 DEBUG: First post _id: {posts[0].get('_id')}")
+        else:
+            print("⚠️ DEBUG: No posts returned from service")
+        
+        result = {
+            "success": True,
+            "count": len(posts),
+            "posts": posts
+        }
+        
+        print(f"🔍 DEBUG: Returning result with {len(posts)} posts")
+        return result
+        
+    except Exception as e:
+        print(f"❌ DEBUG: Exception in endpoint: {e}")
+        print(f"🔍 DEBUG: Exception type: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "visual-verification"}
+
 
 # Educational Content API Endpoints
 @app.get("/educational/modules")

@@ -23,7 +23,8 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
 
   // Get verdict color and styling
   const getVerdictStyling = (verdict) => {
-    switch (verdict.toLowerCase()) {
+    // Fallback to "unverified" if verdict is missing
+    switch (verdict?.toLowerCase() || "unverified") {
       case "true":
         return {
           bg: isDarkMode ? "bg-green-900" : "bg-green-50",
@@ -58,7 +59,8 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
     }
   };
 
-  const verdictStyling = getVerdictStyling(post.verification.verdict);
+  // Use optional chaining to prevent crash if verification or verdict is missing
+  const verdictStyling = getVerdictStyling(post.verification?.verdict);
 
   return (
     <MotionCard
@@ -126,7 +128,8 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
             ease: "easeInOut",
           }}
         >
-          {post.verification.verdict}
+          {/* Display verdict, with a fallback */}
+          {post.verification?.verdict || "Unverified"}
         </motion.span>
 
         <div className="flex items-center space-x-1">
@@ -141,7 +144,8 @@ const RumourCard = ({ post, isDarkMode, onClick }) => {
             darkColor="#9ca3af"
             lightColor="#6b7280"
           >
-            {formatTimestamp(post.verification.verification_date)}
+            {/* Use optional chaining for the date as well */}
+            {formatTimestamp(post.verification?.verification_date)}
           </MotionText>
         </div>
       </div>
