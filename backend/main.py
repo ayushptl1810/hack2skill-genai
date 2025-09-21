@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +12,7 @@ from services.image_verifier import ImageVerifier
 from services.video_verifier import VideoVerifier
 from services.input_processor import InputProcessor
 from services.text_fact_checker import TextFactChecker
+from services.educational_content_generator import EducationalContentGenerator
 from utils.file_utils import save_upload_file, cleanup_temp_files
 
 app = FastAPI(
@@ -39,6 +40,7 @@ image_verifier = ImageVerifier()
 video_verifier = VideoVerifier()
 input_processor = InputProcessor()
 text_fact_checker = TextFactChecker()
+educational_generator = EducationalContentGenerator()
 
 @app.get("/")
 async def root():
@@ -298,6 +300,81 @@ def _aggregate_verdicts(results: List[Dict]) -> str:
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "visual-verification"}
+
+# Educational Content API Endpoints
+@app.get("/educational/modules")
+async def get_educational_modules():
+    """Get list of available educational modules"""
+    try:
+        modules_data = await educational_generator.get_modules_list()
+        return modules_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/educational/modules/{module_id}")
+async def get_module_content(
+    module_id: str,
+    difficulty_level: str = "beginner"
+):
+    """Get educational content for a specific module"""
+    try:
+        content = await educational_generator.generate_module_content(
+            module_id, difficulty_level
+        )
+        return content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/educational/contextual-learning")
+async def get_contextual_learning(verification_result: Dict[str, Any]):
+    """Generate educational content based on verification result"""
+    try:
+        content = await educational_generator.generate_contextual_learning(
+            verification_result
+        )
+        return content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/educational/clear-cache")
+async def clear_educational_cache():
+    """Clear all educational content from Redis cache"""
+    try:
+        if educational_generator.redis_client:
+            # Get all educational cache keys
+            keys = educational_generator.redis_client.keys("educational:*")
+            if keys:
+                educational_generator.redis_client.delete(*keys)
+                return {"message": f"Cleared {len(keys)} cache entries", "keys": keys}
+            else:
+                return {"message": "No cache entries found"}
+        else:
+            return {"message": "Redis not available"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/educational/cache-status")
+async def get_cache_status():
+    """Get status of educational content cache"""
+    try:
+        if educational_generator.redis_client:
+            keys = educational_generator.redis_client.keys("educational:*")
+            cache_info = {}
+            for key in keys:
+                ttl = educational_generator.redis_client.ttl(key)
+                cache_info[key] = {
+                    "ttl": ttl,
+                    "exists": ttl > 0
+                }
+            return {
+                "redis_connected": True,
+                "total_keys": len(keys),
+                "cache_info": cache_info
+            }
+        else:
+            return {"redis_connected": False, "message": "Redis not available"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
