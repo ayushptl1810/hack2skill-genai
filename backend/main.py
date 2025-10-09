@@ -222,13 +222,24 @@ async def chatbot_verify(
     Chatbot-friendly endpoint that intelligently processes input and routes to appropriate verification
     """
     try:
+        print(f"🔍 DEBUG: Chatbot verify endpoint called")
+        print(f"🔍 DEBUG: text_input = {text_input}")
+        print(f"🔍 DEBUG: files = {files}")
+        print(f"🔍 DEBUG: files type = {type(files)}")
+        if files:
+            for i, file in enumerate(files):
+                print(f"🔍 DEBUG: File {i}: filename={file.filename}, content_type={file.content_type}, size={file.size}")
+        
         # Process input with LLM
+        print(f"🔍 DEBUG: Calling input_processor.process_input()")
         processed_input = await input_processor.process_input(
             text_input=text_input,
             files=files
         )
+        print(f"🔍 DEBUG: processed_input = {processed_input}")
         
         if "error" in processed_input:
+            print(f"❌ DEBUG: Error in processed_input: {processed_input['error']}")
             return {"error": processed_input["error"]}
         
         verification_type = processed_input["verification_type"]
@@ -236,11 +247,17 @@ async def chatbot_verify(
         claim_context = processed_input["claim_context"]
         claim_date = processed_input["claim_date"]
         
+        print(f"🔍 DEBUG: verification_type = {verification_type}")
+        print(f"🔍 DEBUG: content = {content}")
+        print(f"🔍 DEBUG: claim_context = {claim_context}")
+        print(f"🔍 DEBUG: claim_date = {claim_date}")
+        
         results = []
         temp_files_to_cleanup = []
         
         # Handle text-only verification
         if verification_type == "text" and content.get("text"):
+            print(f"🔍 DEBUG: Processing text verification with text: {content['text']}")
             result = await text_fact_checker.verify(
                 text_input=content["text"],
                 claim_context=claim_context,
@@ -248,18 +265,24 @@ async def chatbot_verify(
             )
             result["source"] = "text_input"
             results.append(result)
+            print(f"🔍 DEBUG: Text verification result: {result}")
         
         # Process files if any
-        for file_path in content["files"]:
+        files_list = content.get("files", [])
+        print(f"🔍 DEBUG: Processing {len(files_list)} files")
+        for i, file_path in enumerate(files_list):
+            print(f"🔍 DEBUG: Processing file {i}: {file_path}")
             temp_files_to_cleanup.append(file_path)
             
             if verification_type == "image":
+                print(f"🔍 DEBUG: Calling image_verifier.verify for file")
                 result = await image_verifier.verify(
                     image_path=file_path,
                     claim_context=claim_context,
                     claim_date=claim_date
                 )
             else:  # video
+                print(f"🔍 DEBUG: Calling video_verifier.verify for file")
                 result = await video_verifier.verify(
                     video_path=file_path,
                     claim_context=claim_context,
@@ -268,16 +291,22 @@ async def chatbot_verify(
             
             result["source"] = "uploaded_file"
             results.append(result)
+            print(f"🔍 DEBUG: File verification result: {result}")
         
         # Process URLs if any
-        for url in content["urls"]:
+        urls_list = content.get("urls", [])
+        print(f"🔍 DEBUG: Processing {len(urls_list)} URLs")
+        for i, url in enumerate(urls_list):
+            print(f"🔍 DEBUG: Processing URL {i}: {url}")
             if verification_type == "image":
+                print(f"🔍 DEBUG: Calling image_verifier.verify for URL")
                 result = await image_verifier.verify(
                     image_url=url,
                     claim_context=claim_context,
                     claim_date=claim_date
                 )
             else:  # video
+                print(f"🔍 DEBUG: Calling video_verifier.verify for URL")
                 result = await video_verifier.verify(
                     video_url=url,
                     claim_context=claim_context,
@@ -286,13 +315,20 @@ async def chatbot_verify(
             
             result["source"] = "url"
             results.append(result)
+            print(f"🔍 DEBUG: URL verification result: {result}")
         
         # Clean up temp files
         if temp_files_to_cleanup:
             input_processor.cleanup_temp_files(temp_files_to_cleanup)
         
+        print(f"🔍 DEBUG: Total results collected: {len(results)}")
+        for i, result in enumerate(results):
+            print(f"🔍 DEBUG: Result {i}: {result}")
+        
         # Build a single concise chatbot message
         overall = _aggregate_verdicts(results)
+        print(f"🔍 DEBUG: Overall verdict: {overall}")
+        
         # Prefer consolidated video summary when present, else per-item message
         candidates: List[str] = []
         for r in results:
@@ -303,6 +339,9 @@ async def chatbot_verify(
                 elif r.get("message"):
                     candidates.append(str(r.get("message")))
         best_msg = max(candidates, key=len) if candidates else ""
+        print(f"🔍 DEBUG: Best message candidates: {candidates}")
+        print(f"🔍 DEBUG: Best message: {best_msg}")
+        
         # Avoid duplication by detecting if clarification already begins with a verdict phrase
         verdict_prefixes = [
             "this claim is true:",
@@ -327,7 +366,11 @@ async def chatbot_verify(
             final_message = best_msg.strip()
         else:
             final_message = f"{prefix} {best_msg}" if best_msg else prefix
-        return {
+        
+        print(f"🔍 DEBUG: Final message: {final_message}")
+        print(f"🔍 DEBUG: Final verdict: {overall}")
+        
+        response = {
             "message": final_message,
             "verdict": overall,
             "details": {
@@ -337,8 +380,15 @@ async def chatbot_verify(
                 "claim_date": claim_date
             }
         }
+        
+        print(f"🔍 DEBUG: Final response: {response}")
+        return response
             
     except Exception as e:
+        print(f"❌ DEBUG: Exception in chatbot_verify: {e}")
+        print(f"❌ DEBUG: Exception type: {type(e).__name__}")
+        import traceback
+        print(f"❌ DEBUG: Traceback: {traceback.format_exc()}")
         # Clean up any temp files on error
         if 'temp_files_to_cleanup' in locals():
             input_processor.cleanup_temp_files(temp_files_to_cleanup)
@@ -506,4 +556,4 @@ async def get_cache_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=7860)

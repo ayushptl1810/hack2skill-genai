@@ -37,7 +37,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
     try {
       setLoading(true);
       console.log("Loading educational modules...");
-      const response = await fetch("http://127.0.0.1:8000/educational/modules");
+      const response = await fetch("http://127.0.0.1:7860/educational/modules");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -80,7 +80,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
       setLoading(true);
       console.log(`Loading content for ${moduleId} (${difficultyLevel})...`);
       const response = await fetch(
-        `http://127.0.0.1:8000/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
+        `http://127.0.0.1:7860/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -46,7 +46,7 @@ const EducationalSidebar = ({
   const loadModules = async () => {
     try {
       console.log("Loading educational modules...");
-      const response = await fetch("http://127.0.0.1:8000/educational/modules");
+      const response = await fetch("http://127.0.0.1:7860/educational/modules");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -86,7 +86,7 @@ const EducationalSidebar = ({
     try {
       console.log(`Loading content for ${moduleId} (${difficultyLevel})...`);
       const response = await fetch(
-        `http://127.0.0.1:8000/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
+        `http://127.0.0.1:7860/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -115,7 +115,7 @@ const EducationalSidebar = ({
     try {
       console.log("Loading contextual learning...");
       const response = await fetch(
-        "http://127.0.0.1:8000/educational/contextual-learning",
+        "http://127.0.0.1:7860/educational/contextual-learning",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

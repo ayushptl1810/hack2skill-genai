@@ -38,9 +38,14 @@ class TextFactChecker:
             Dictionary containing verification results
         """
         try:
+            print(f"🔍 DEBUG: TextFactChecker.verify called")
+            print(f"🔍 DEBUG: text_input = {text_input}")
+            print(f"🔍 DEBUG: claim_context = {claim_context}")
+            print(f"🔍 DEBUG: claim_date = {claim_date}")
             print(f"Starting verification for: {text_input}")
             # Search for fact-checked claims related to the input text
             search_results = await self._search_claims(text_input)
+            print(f"🔍 DEBUG: search_results = {search_results}")
             
             if not search_results:
                 return {
