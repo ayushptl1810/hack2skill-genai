@@ -43,6 +43,7 @@ app.add_middleware(
 import os
 os.makedirs("public/frames", exist_ok=True)
 app.mount("/static", StaticFiles(directory="public"), name="static")
+app.mount("/frames", StaticFiles(directory="public/frames"), name="frames")
 
 
 # Initialize verifiers and input processor
@@ -556,4 +557,4 @@ async def get_cache_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    uvicorn.run(app, host="0.0.0.0", port=config.SERVICE_PORT)

@@ -285,7 +285,7 @@ class VideoVerifier:
                     # fallback local (note: SerpApi can't access localhost; cloudinary is preferred)
                     from urllib.parse import quote
                     rel = frame_path.replace(os.path.join("public", ''), "") if frame_path.startswith("public"+os.sep) else os.path.basename(frame_path)
-                    frame_url = f"http://127.0.0.1:7860/static/{quote(rel)}"
+                    frame_url = f"http://127.0.0.1:{config.SERVICE_PORT}/static/{quote(rel)}"
                 print("[video] analyze_frame", {"ts": timestamp, "path": frame_path})
                 # Gather evidence only for this frame
                 ev = await self.image_verifier.gather_evidence(

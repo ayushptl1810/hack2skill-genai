@@ -6,21 +6,15 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 import google.generativeai as genai
-# Support multiple known import paths for SerpApi client
+# Import SerpApi client - use the correct import path from documentation
 GoogleSearch = None  # type: ignore
 try:
-    from serpapi import GoogleSearch as _GS  # preferred per docs
+    from serpapi import GoogleSearch as _GS  # correct import per SerpApi docs
     GoogleSearch = _GS
-except Exception:
-    try:
-        from serpapi.google_search_results import GoogleSearch as _GS  # alt path
-        GoogleSearch = _GS
-    except Exception:
-        try:
-            from google_search_results import GoogleSearch as _GS  # legacy/dist name
-            GoogleSearch = _GS
-        except Exception:
-            GoogleSearch = None  # client unavailable; will fall back to HTTP
+    print("[serpapi] Successfully imported GoogleSearch from serpapi")
+except Exception as e:
+    print(f"[serpapi] Failed to import GoogleSearch: {e}")
+    GoogleSearch = None  # client unavailable; will fall back to HTTP
 from config import config
 
 
@@ -52,7 +46,7 @@ class ImageVerifier:
         
         # SerpApi endpoints
         self.base_url_json = "https://serpapi.com/search.json"  # for GET with image_url
-        self.base_url_form = "https://serpapi.com/search"       # for POST form with image_content
+        self.base_url_form = "https://serpapi.com/search.json"  # for POST form with image_content
         
     async def verify(self, image_path: Optional[str] = None, claim_context: str = "", claim_date: str = "", image_url: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -786,23 +780,48 @@ EVIDENCE: {evidence}
         
         Args:
             image_path: Path to the image file
+            image_url: URL of the image
             
         Returns:
             Search results from SerpApi
         """
         try:
-            # Build params per SerpApi docs
+            if GoogleSearch is None:
+                raise RuntimeError("google-search-results package not available. Install with: pip install google-search-results")
+            
+            # Build params per SerpApi docs - use official client for ALL requests
             params: Dict[str, Any] = {
                 "engine": "google_reverse_image",
                 "api_key": self.api_key,
             }
+            
             if image_url:
+                # Use image_url parameter for URLs
                 params["image_url"] = image_url
+                print("[serpapi] Using image_url parameter")
             elif image_path:
-                with open(image_path, "rb") as img_file:
-                    img_data = img_file.read()
-                img_base64 = base64.b64encode(img_data).decode("utf-8")
-                params["image_content"] = img_base64
+                # For local files, upload to Cloudinary first to get a public URL
+                try:
+                    cloudinary_url = await self._upload_to_cloudinary(image_path)
+                    if cloudinary_url:
+                        params["image_url"] = cloudinary_url
+                        print(f"[serpapi] Using Cloudinary URL: {cloudinary_url}")
+                    else:
+                        print("[serpapi] Cloudinary upload failed, falling back to base64")
+                        # Fallback to base64 if Cloudinary fails
+                        with open(image_path, "rb") as img_file:
+                            img_data = img_file.read()
+                        img_base64 = base64.b64encode(img_data).decode("utf-8")
+                        params["image_content"] = img_base64
+                        print("[serpapi] Using image_content parameter (base64 fallback)")
+                except Exception as e:
+                    print(f"[serpapi] Error uploading to Cloudinary: {e}")
+                    # Fallback to base64
+                    with open(image_path, "rb") as img_file:
+                        img_data = img_file.read()
+                    img_base64 = base64.b64encode(img_data).decode("utf-8")
+                    params["image_content"] = img_base64
+                    print("[serpapi] Using image_content parameter (base64 fallback)")
 
             # Debug prints
             print("[serpapi] params", {
@@ -812,51 +831,39 @@ EVIDENCE: {evidence}
                 "image_content_len": len(params.get("image_content", "")) if params.get("image_content") else 0,
             })
 
-            # Prefer official client for image_url; for image_content use HTTP POST (form) to avoid URL-size issues
-            try:
-                if params.get("image_content"):
-                    # Use POST with form data
-                    resp = requests.post(self.base_url_form, data=params, timeout=40)
-                    print("[serpapi] http_post status", resp.status_code)
-                    resp.raise_for_status()
-                    js = resp.json()
-                    return js
-                else:
-                    if GoogleSearch is None:
-                        raise RuntimeError("google-search-results package not available. Install with: pip install google-search-results")
-                    search = GoogleSearch(params)  # type: ignore
-                    results = search.get_dict()
-                    return results
-            except Exception as e:
-                # Fallback: try HTTP GET/POST and print diagnostics
-                print("[serpapi] client_error", str(e))
+            # Use different approaches based on whether we have image_url or image_content
+            if params.get("image_url"):
+                # For image_url, use the official client (works well)
+                print("[serpapi] Using official GoogleSearch client for image_url")
+                search = GoogleSearch(params)  # type: ignore
+                results = search.get_dict()
+                print("[serpapi] Successfully got results from GoogleSearch client")
+                return results
+            else:
+                # For image_content (base64), use direct HTTP POST to avoid header size issues
+                print("[serpapi] Using direct HTTP POST for image_content (base64)")
                 try:
-                    if params.get("image_content"):
-                        resp = requests.post(self.base_url_form, data=params, timeout=40)
-                    else:
-                        resp = requests.get(self.base_url_json, params=params, timeout=40)
-                    print("[serpapi] http_fallback status", resp.status_code)
-                    head = resp.text[:200] if hasattr(resp, 'text') else ''
-                    print("[serpapi] http_fallback head", head)
-                    resp.raise_for_status()
-                    return resp.json()
-                except Exception as e2:
-                    print("[serpapi] http_fallback_error", str(e2))
+                    import requests
+                    response = requests.post(
+                        "https://serpapi.com/search?engine=google_reverse_image",
+                        data=params,
+                        timeout=60
+                    )
+                    print(f"[serpapi] HTTP POST status: {response.status_code}")
+                    response.raise_for_status()
+                    results = response.json()
+                    print("[serpapi] Successfully got results from HTTP POST")
+                    return results
+                except Exception as http_error:
+                    print(f"[serpapi] HTTP POST failed: {http_error}")
                     return {}
             
         except Exception as e:
-            print(f"Error in reverse image search: {e}")
+            print(f"[serpapi] Error in reverse image search: {e}")
+            print(f"[serpapi] Error type: {type(e).__name__}")
+            import traceback
+            print(f"[serpapi] Traceback: {traceback.format_exc()}")
             return {}
-    
-    # Removed: legacy heuristic analyzer (replaced by consolidated LLM pass)
-    
-    # Removed: legacy heuristic helpers (replaced by consolidated LLM pass)
-
-    # Removed: legacy token mining helper
-
-    # Removed: legacy date aliases helper
-
-    # Removed: legacy year-from-claim helper
 
     def _extract_year_from_text(self, text: str) -> Optional[int]:
         if not text:
@@ -927,6 +934,85 @@ EVIDENCE: {evidence}
             print(f"Error generating counter-measure: {e}")
             raise
     
+    async def _upload_to_cloudinary(self, image_path: str) -> Optional[str]:
+        """
+        Upload image to Cloudinary and return the public URL
+        
+        Args:
+            image_path: Path to the source image file
+            
+        Returns:
+            Cloudinary public URL of the uploaded image, or None if upload fails
+        """
+        try:
+            import cloudinary
+            import cloudinary.uploader
+            from config import config
+            
+            # Configure Cloudinary
+            cloudinary.config(
+                cloud_name=config.CLOUDINARY_CLOUD_NAME,
+                api_key=config.CLOUDINARY_API_KEY,
+                api_secret=config.CLOUDINARY_API_SECRET
+            )
+            
+            # Upload to Cloudinary with frames folder
+            result = cloudinary.uploader.upload(
+                image_path,
+                folder="frames",
+                resource_type="image"
+            )
+            
+            if result and result.get('secure_url'):
+                public_url = result['secure_url']
+                print(f"[cloudinary] Uploaded {image_path} to {public_url}")
+                return public_url
+            else:
+                print("[cloudinary] Upload failed - no secure_url in response")
+                return None
+                
+        except Exception as e:
+            print(f"[cloudinary] Error uploading to Cloudinary: {e}")
+            return None
+
+    async def _copy_to_public_folder(self, image_path: str) -> Optional[str]:
+        """
+        Copy image to public/frames folder and return the public URL
+        
+        Args:
+            image_path: Path to the source image file
+            
+        Returns:
+            Public URL of the copied image, or None if copy fails
+        """
+        try:
+            import shutil
+            import uuid
+            from pathlib import Path
+            
+            # Create public/frames directory if it doesn't exist
+            public_frames_dir = Path("public/frames")
+            public_frames_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate unique filename
+            file_extension = Path(image_path).suffix
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            public_path = public_frames_dir / unique_filename
+            
+            # Copy the file
+            shutil.copy2(image_path, public_path)
+            
+            # Return the public URL
+            public_url = f"http://127.0.0.1:{config.SERVICE_PORT}/frames/{unique_filename}"
+            print(f"[copy] Copied {image_path} to {public_path}")
+            print(f"[copy] Public URL: {public_url}")
+            
+            return public_url
+            
+        except Exception as e:
+            print(f"[copy] Error copying to public folder: {e}")
+            return None
+
     async def _download_image(self, image_url: str) -> Image.Image:
         """
         Download an image from URL

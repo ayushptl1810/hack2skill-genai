@@ -16,3 +16,5 @@ scikit-learn
 numpy
 python-multipart
 pymongo
+cloudinary
+redis
