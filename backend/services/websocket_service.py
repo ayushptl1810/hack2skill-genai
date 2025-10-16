@@ -189,8 +189,8 @@ class MongoDBChangeStreamService:
                 }
             }
             
-            # Broadcast to all connected clients
-            await connection_manager.broadcast(json.dumps(message))
+            # Broadcast to all connected clients (serialize datetimes/ObjectIds)
+            await connection_manager.broadcast(json.dumps(message, default=str))
             logger.info(f"📡 Broadcasted new post to {len(connection_manager.active_connections)} clients")
             
         except Exception as e:

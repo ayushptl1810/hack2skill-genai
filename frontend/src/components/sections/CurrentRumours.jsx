@@ -97,6 +97,7 @@ const CurrentRumours = ({ isDarkMode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
+  const [now, setNow] = useState(new Date());
 
   // WebSocket message handler
   const handleWebSocketMessage = useCallback((data) => {
@@ -153,13 +154,27 @@ const CurrentRumours = ({ isDarkMode }) => {
     console.error("❌ WebSocket error:", error);
   }, []);
 
-  // Get the base URLs from environment variables
-  const VITE_API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7860";
+  // Derive WebSocket URL robustly without hardcoding
+  const computeWsUrl = () => {
+    const envWs = import.meta.env.VITE_WS_URL;
+    if (envWs && typeof envWs === "string")
+      return envWs.endsWith("/ws") ? envWs : `${envWs.replace(/\/$/, "")}/ws`;
 
-  const wsProtocol = VITE_API_BASE_URL.startsWith("https") ? "wss" : "ws";
-  const wsHost = VITE_API_BASE_URL.replace(/^https?:\/\//, "");
-  const wsUrl = `${wsProtocol}://${wsHost}/ws`;
+    const apiBase = import.meta.env.VITE_API_BASE_URL;
+    if (apiBase && typeof apiBase === "string") {
+      const protocol = apiBase.startsWith("https") ? "wss" : "ws";
+      const host = apiBase.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      return `${protocol}://${host}/ws`;
+    }
+
+    // Fallback to window.location for dev if no envs set
+    const loc = window.location;
+    const protocol = loc.protocol === "https:" ? "wss" : "ws";
+    const host = loc.host; // includes hostname:port
+    return `${protocol}://${host}/ws`;
+  };
+
+  const wsUrl = computeWsUrl();
 
   // Initialize WebSocket connection
   const {
@@ -180,7 +195,26 @@ const CurrentRumours = ({ isDarkMode }) => {
       setIsLoading(true);
       setError(null);
 
-      const apiUrl = `${VITE_API_BASE_URL}/mongodb/recent-posts?limit=5`;
+      // Derive HTTP API base similarly to WS without hardcoding
+      const computeApiBaseUrl = () => {
+        const apiBase = import.meta.env.VITE_API_BASE_URL;
+        if (apiBase && typeof apiBase === "string") {
+          return apiBase.replace(/\/$/, "");
+        }
+        // If we have an absolute wsUrl, derive HTTP base from it to avoid hitting the Vite dev origin
+        try {
+          const urlObj = new URL(wsUrl, window.location.href);
+          if (urlObj.host) {
+            const httpProtocol =
+              urlObj.protocol === "wss:" ? "https:" : "http:";
+            return `${httpProtocol}//${urlObj.host}`;
+          }
+        } catch {}
+        // Fallback to current origin
+        return window.location.origin;
+      };
+
+      const apiUrl = `${computeApiBaseUrl()}/mongodb/recent-posts?limit=5`;
       console.log("🔍 DEBUG: Making request to:", apiUrl);
 
       const response = await fetch(apiUrl);
@@ -229,6 +263,12 @@ const CurrentRumours = ({ isDarkMode }) => {
 
   useEffect(() => {
     fetchRecentPosts();
+  }, []);
+
+  // Tick the current time every minute so relative timestamps refresh
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleRumourClick = (rumour) => {
@@ -339,6 +379,7 @@ const CurrentRumours = ({ isDarkMode }) => {
                 <RumourCard
                   post={rumour}
                   isDarkMode={isDarkMode}
+                  now={now}
                   onClick={() => handleRumourClick(rumour)}
                 />
               </motion.div>

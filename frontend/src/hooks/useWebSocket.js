@@ -39,7 +39,8 @@ export const useWebSocket = (url, options = {}) => {
       };
 
       ws.current.onclose = (event) => {
-        console.log("🔌 WebSocket disconnected:", event.code, event.reason);
+        const reason = event.reason || "";
+        console.log("🔌 WebSocket disconnected:", event.code, reason);
         setIsConnected(false);
 
         if (onClose) {
@@ -75,7 +76,7 @@ export const useWebSocket = (url, options = {}) => {
 
       ws.current.onerror = (event) => {
         console.error("❌ WebSocket error:", event);
-        setError("WebSocket connection error");
+        setError(`WebSocket error (readyState ${ws.current?.readyState})`);
 
         if (onError) {
           onError(event);

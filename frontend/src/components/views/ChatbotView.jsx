@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -28,6 +28,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const fileInputRef = useRef(null);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() && uploadedFiles.length === 0) return;
@@ -43,6 +44,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setUploadedFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = null;
     setIsLoading(true);
 
     try {
@@ -230,7 +232,50 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                     ease: "easeInOut",
                   }}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  {message.files && message.files.length > 0 && (
+                    <div className="mt-3 flex flex-col gap-2">
+                      {message.files.map((file, idx) => {
+                        const isImage =
+                          file.type && file.type.startsWith("image/");
+                        if (isImage) {
+                          const objectUrl = URL.createObjectURL(file);
+                          return (
+                            <div
+                              key={idx}
+                              className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-700"
+                            >
+                              <img
+                                src={objectUrl}
+                                alt={file.name || `upload-${idx}`}
+                                className="w-full max-w-xs h-auto object-contain"
+                                onLoad={(e) => {
+                                  URL.revokeObjectURL(objectUrl);
+                                }}
+                              />
+                            </div>
+                          );
+                        }
+                        const FileIcon = getFileIcon(file);
+                        return (
+                          <div
+                            key={idx}
+                            className={`flex items-center space-x-2 px-3 py-2 rounded-md border text-xs ${
+                              isDarkMode
+                                ? "bg-gray-800 border-gray-700 text-gray-200"
+                                : "bg-gray-50 border-gray-200 text-gray-700"
+                            }`}
+                          >
+                            <FileIcon className="w-4 h-4 text-blue-500" />
+                            <span className="truncate" title={file.name}>
+                              {file.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <p className="text-sm mt-3">{message.content}</p>
 
                   {message.sources && message.sources.length > 0 && (
                     <div
@@ -391,12 +436,17 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
             <input
               type="file"
               id="file-upload"
+              ref={fileInputRef}
               onChange={handleFileUpload}
               className="hidden"
             />
             <motion.label
               htmlFor="file-upload"
               className="p-2 rounded-lg cursor-pointer"
+              onClick={() => {
+                // ensure selecting the same file again fires onChange
+                if (fileInputRef.current) fileInputRef.current.value = null;
+              }}
               animate={{
                 color: isDarkMode ? "#9ca3af" : "#6b7280",
                 backgroundColor: "transparent",

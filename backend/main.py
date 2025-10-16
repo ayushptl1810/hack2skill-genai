@@ -90,6 +90,11 @@ async def websocket_endpoint(websocket: WebSocket):
     logger.info(f"✅ WebSocket client connected. Total connections: {len(connection_manager.active_connections)}")
     
     try:
+        # Send initial greeting to confirm connectivity
+        await connection_manager.send_personal_message(
+            json.dumps({"type": "hello", "message": "Connected to rumours stream"}),
+            websocket
+        )
         while True:
             try:
                 # Wait for incoming messages with a timeout
@@ -228,9 +233,22 @@ async def chatbot_verify(
         print(f"🔍 DEBUG: text_input = {text_input}")
         print(f"🔍 DEBUG: files = {files}")
         print(f"🔍 DEBUG: files type = {type(files)}")
+        received_files_meta: List[Dict[str, Any]] = []
         if files:
             for i, file in enumerate(files):
                 print(f"🔍 DEBUG: File {i}: filename={file.filename}, content_type={file.content_type}, size={file.size}")
+                try:
+                    received_files_meta.append({
+                        "filename": getattr(file, "filename", None),
+                        "content_type": getattr(file, "content_type", None),
+                        "size": getattr(file, "size", None)
+                    })
+                except Exception:
+                    received_files_meta.append({
+                        "filename": getattr(file, "filename", None),
+                        "content_type": getattr(file, "content_type", None),
+                        "size": None
+                    })
         
         # Process input with LLM
         print(f"🔍 DEBUG: Calling input_processor.process_input()")
@@ -379,7 +397,9 @@ async def chatbot_verify(
                 "results": results,
                 "verification_type": verification_type,
                 "claim_context": claim_context,
-                "claim_date": claim_date
+                "claim_date": claim_date,
+                "received_files_count": len(received_files_meta),
+                "received_files": received_files_meta
             }
         }
         

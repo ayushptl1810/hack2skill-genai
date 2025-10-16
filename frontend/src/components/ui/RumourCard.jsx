@@ -3,18 +3,21 @@ import MotionText from "./MotionText";
 import MotionCard from "./MotionCard";
 import { Clock } from "lucide-react";
 
-const RumourCard = ({ post, isDarkMode, onClick }) => {
+const RumourCard = ({ post, isDarkMode, onClick, now }) => {
   // Truncate claim to ~100 characters
   const truncatedClaim =
     post.claim.length > 100 ? `${post.claim.substring(0, 100)}...` : post.claim;
 
   // Format timestamp to relative time
   const formatTimestamp = (timestamp) => {
-    const now = new Date();
+    const nowRef = now instanceof Date ? now : new Date();
     const postTime = new Date(timestamp);
-    const diffInHours = Math.floor((now - postTime) / (1000 * 60 * 60));
+    const diffMs = nowRef - postTime;
+    const diffInMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffInHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return "Just now";
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;

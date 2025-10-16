@@ -166,6 +166,158 @@ def add_sample_rumours():
                 }
             },
             "stored_at": datetime.now() - timedelta(minutes=10)
+        },
+        {
+            "post_id": "sample_rumour_006",
+            "claim": "Viral deepfake shows the president announcing an unexpected policy change",
+            "summary": "A widely shared video appears to show a surprise announcement from the president",
+            "platform": "YouTube",
+            "Post_link": "https://youtube.com/watch?v=deepfake-announcement",
+            "verification": {
+                "verdict": "false",
+                "message": "The clip is a deepfake; official channels have no record of this announcement",
+                "reasoning": "Audio-visual artifacts and mismatch with verified schedule indicate synthetic media",
+                "verification_date": datetime.now() - timedelta(minutes=5),
+                "sources": {
+                    "count": 2,
+                    "links": [
+                        "https://whitehouse.gov/schedule",
+                        "https://journal.example.com/deepfake-analysis"
+                    ],
+                    "titles": [
+                        "Official Schedule",
+                        "Deepfake Analysis"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=5)
+        },
+        {
+            "post_id": "sample_rumour_007",
+            "claim": "Wildfire evacuation map shows entire county under immediate threat",
+            "summary": "A map circulating online claims an entire county is being evacuated",
+            "platform": "Telegram",
+            "Post_link": "https://t.me/channel/wildfire-map",
+            "verification": {
+                "verdict": "disputed",
+                "message": "Only specific zones are under watch; no county-wide evacuation order",
+                "reasoning": "Emergency management alerts list partial warnings, not blanket evacuations",
+                "verification_date": datetime.now() - timedelta(minutes=8),
+                "sources": {
+                    "count": 2,
+                    "links": [
+                        "https://alerts.example.gov/region-updates",
+                        "https://county.gov/emergency"
+                    ],
+                    "titles": [
+                        "Regional Alerts",
+                        "County Emergency Updates"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=8)
+        },
+        {
+            "post_id": "sample_rumour_008",
+            "claim": "Celebrity X claimed in 2015 that vaccines are a government tracking program",
+            "summary": "A screenshot attributes an anti-vaccine quote to a well-known actor",
+            "platform": "Threads",
+            "Post_link": "https://www.threads.net/@user/post/abc123",
+            "verification": {
+                "verdict": "false",
+                "message": "No credible source supports this quote; likely fabricated image",
+                "reasoning": "Archive search and press records show no such statement from the celebrity",
+                "verification_date": datetime.now() - timedelta(minutes=12),
+                "sources": {
+                    "count": 3,
+                    "links": [
+                        "https://archive.org/celebrity-press",
+                        "https://newsdb.example.com/search",
+                        "https://snopes.com/fact-check/celebrity-misattributed-quote"
+                    ],
+                    "titles": [
+                        "Press Archive",
+                        "News Database",
+                        "Fact Check"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=12)
+        },
+        {
+            "post_id": "sample_rumour_009",
+            "claim": "Nationwide vaccine recall announced due to severe side effects",
+            "summary": "Posts claim an emergency recall affecting all batches",
+            "platform": "WhatsApp",
+            "Post_link": "https://example.com/forwarded-message",
+            "verification": {
+                "verdict": "false",
+                "message": "No regulatory recall issued; official notices contradict the claim",
+                "reasoning": "Regulatory databases list no recall matching the description",
+                "verification_date": datetime.now() - timedelta(minutes=25),
+                "sources": {
+                    "count": 2,
+                    "links": [
+                        "https://fda.gov/recalls",
+                        "https://who.int/medical-product-alerts"
+                    ],
+                    "titles": [
+                        "FDA Recalls",
+                        "WHO Alerts"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=25)
+        },
+        {
+            "post_id": "sample_rumour_010",
+            "claim": "Earthquake predicted to hit the capital city at 7 PM tonight",
+            "summary": "A viral message predicts an exact time for a major quake",
+            "platform": "TikTok",
+            "Post_link": "https://tiktok.com/@user/video/quake-prediction",
+            "verification": {
+                "verdict": "false",
+                "message": "Earthquakes cannot be predicted with exact timing using current science",
+                "reasoning": "Seismology consensus rejects precise short-term predictions",
+                "verification_date": datetime.now() - timedelta(minutes=18),
+                "sources": {
+                    "count": 2,
+                    "links": [
+                        "https://usgs.gov/faqs/can-you-predict-earthquakes",
+                        "https://seismo.org/position-on-prediction"
+                    ],
+                    "titles": [
+                        "USGS FAQs",
+                        "Seismology Position"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=18)
+        },
+        {
+            "post_id": "sample_rumour_011",
+            "claim": "Poll shows 98% support for Candidate Y after overnight update",
+            "summary": "Graphic claims near-unanimous polling shift in one night",
+            "platform": "X",
+            "Post_link": "https://x.com/example/status/shifted-poll",
+            "verification": {
+                "verdict": "uncertain",
+                "message": "No reputable pollster has published this figure; methodology unclear",
+                "reasoning": "Source lacks sampling details; awaiting official releases",
+                "verification_date": datetime.now() - timedelta(minutes=30),
+                "sources": {
+                    "count": 2,
+                    "links": [
+                        "https://fivethirtyeight.com/polls/",
+                        "https://aapor.org/methods-standards"
+                    ],
+                    "titles": [
+                        "Polling Aggregator",
+                        "Survey Standards"
+                    ]
+                }
+            },
+            "stored_at": datetime.now() - timedelta(minutes=30)
         }
     ]
     
