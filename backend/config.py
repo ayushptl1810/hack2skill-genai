@@ -80,10 +80,9 @@ class Config:
     # Debug Configuration
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     
-    # Redis Configuration
-    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
-    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    # Upstash Redis Configuration
+    UPSTASH_REDIS_URL: Optional[str] = os.getenv("UPSTASH_REDIS_URL")
+    UPSTASH_REDIS_TOKEN: Optional[str] = os.getenv("UPSTASH_REDIS_TOKEN")
     REDIS_TTL: int = int(os.getenv("REDIS_TTL", "86400"))  # 24 hours in seconds
     
     @classmethod

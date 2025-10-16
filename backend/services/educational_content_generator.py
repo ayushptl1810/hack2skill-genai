@@ -2,7 +2,7 @@ import json
 import os
 from typing import Dict, List, Optional, Any
 import google.generativeai as genai
-import redis
+from upstash_redis import Redis
 from config import config
 
 class EducationalContentGenerator:
@@ -13,19 +13,22 @@ class EducationalContentGenerator:
         genai.configure(api_key=config.GEMINI_API_KEY)
         self.model = genai.GenerativeModel(config.GEMINI_MODEL)
         
-        # Initialize Redis connection
+        # Initialize Upstash Redis connection
         try:
-            self.redis_client = redis.Redis(
-                host=config.REDIS_HOST,
-                port=config.REDIS_PORT,
-                db=config.REDIS_DB,
-                decode_responses=True
-            )
-            # Test connection
-            self.redis_client.ping()
-            print("✅ Redis connection established")
+            if config.UPSTASH_REDIS_URL and config.UPSTASH_REDIS_TOKEN:
+                self.redis_client = Redis(
+                    url=config.UPSTASH_REDIS_URL,
+                    token=config.UPSTASH_REDIS_TOKEN
+                )
+                # Test connection
+                self.redis_client.set("test", "connection")
+                self.redis_client.delete("test")
+                print("✅ Upstash Redis connection established")
+            else:
+                print("⚠️ Upstash Redis credentials not found, running without cache")
+                self.redis_client = None
         except Exception as e:
-            print(f"❌ Redis connection failed: {e}")
+            print(f"❌ Upstash Redis connection failed: {e}")
             self.redis_client = None
         
         # Cache TTL (Time To Live) in seconds

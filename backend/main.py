@@ -19,6 +19,7 @@ from services.educational_content_generator import EducationalContentGenerator
 from services.mongodb_service import MongoDBService
 from services.websocket_service import connection_manager, initialize_mongodb_change_stream, cleanup_mongodb_change_stream
 from utils.file_utils import save_upload_file, cleanup_temp_files
+from config import config
 
 app = FastAPI(
     title="Visual Verification Service",

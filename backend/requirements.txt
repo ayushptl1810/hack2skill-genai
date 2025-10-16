@@ -14,7 +14,7 @@ google-auth-oauthlib
 google-auth-httplib2
 scikit-learn
 numpy
-python-multipart
 pymongo
+upstash-redis
+google-search-results
 cloudinary
-redis
