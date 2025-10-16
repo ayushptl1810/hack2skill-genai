@@ -9,7 +9,7 @@ class Config:
     """Configuration class for claim verifier"""
     
     # Google Custom Search API for fact-checking
-    GOOGLE_FACT_CHECK_API_KEY = os.getenv('GOOGLE_FACT_CHECK_API_KEY') or os.getenv('GOOGLE_API_KEY')
+    GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY') or os.getenv('GOOGLE_API_KEY')
     GOOGLE_FACT_CHECK_CX = os.getenv('GOOGLE_FACT_CHECK_CX')
     
     # Gemini API for analysis

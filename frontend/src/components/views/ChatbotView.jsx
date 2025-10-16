@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { getApiBaseUrl } from "../../config/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -29,6 +30,31 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState("");
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  // idle | initializing | recording | stopping
+  const [recordingPhase, setRecordingPhase] = useState("idle");
+  const recordingTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (_) {}
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setRecordingPhase("idle");
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() && uploadedFiles.length === 0) return;
@@ -63,10 +89,9 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
         });
       }
 
-      const VITE_API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:7860";
+      const apiBase = getApiBaseUrl();
 
-      const response = await fetch(`${VITE_API_BASE_URL}/chatbot/verify`, {
+      const response = await fetch(`${apiBase}/chatbot/verify`, {
         method: "POST",
         body: formData, // Send FormData instead of JSON
       });
@@ -130,6 +155,98 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      setRecordingError("");
+      setRecordingPhase("initializing");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+      const chunks = [];
+      mediaRecorder.onstart = () => {
+        // actual recording started
+        setRecordingSeconds(0);
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+        }
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingSeconds((s) => s + 1);
+        }, 1000);
+        setRecordingPhase("recording");
+      };
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+      mediaRecorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: "audio/webm" });
+          const file = new File([blob], `voice-${Date.now()}.webm`, {
+            type: "audio/webm",
+          });
+          const formData = new FormData();
+          formData.append("audio", file);
+          const apiBase = getApiBaseUrl();
+          const resp = await fetch(`${apiBase}/speech-to-text`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || `HTTP ${resp.status}`);
+          }
+          const data = await resp.json();
+          const transcript = (data && data.transcript) || "";
+          if (transcript)
+            setInputValue((prev) =>
+              prev ? `${prev} ${transcript}` : transcript
+            );
+          else setRecordingError("No speech recognized. Try again.");
+        } catch (err) {
+          console.error("Speech-to-text error:", err);
+          setRecordingError("Speech-to-text failed. Check backend logs.");
+        } finally {
+          // stop all tracks
+          stream.getTracks().forEach((t) => t.stop());
+          setIsRecording(false);
+          if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+          }
+          setRecordingSeconds(0);
+          setRecordingPhase("idle");
+        }
+      };
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      // show banner immediately in initializing phase
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Mic access/recording error:", err);
+      setRecordingError("Microphone access denied or unsupported.");
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setRecordingPhase("idle");
+    }
+  };
+
+  const stopRecording = () => {
+    try {
+      setRecordingPhase("stopping");
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+    } catch (err) {
+      console.error("Stop recording error:", err);
     }
   };
 
@@ -376,6 +493,42 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
         )}
       </div>
 
+      {/* Recording Banner */}
+      {isRecording && (
+        <div className="px-6">
+          <div
+            className="mt-2 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-white"
+            style={{ backgroundColor: "#b91c1c" }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+              {recordingPhase === "initializing" && (
+                <div className="text-sm">
+                  <span className="font-medium">Starting…</span>
+                  <span className="opacity-90 ml-2">
+                    first 0.5s can be missed
+                  </span>
+                </div>
+              )}
+              {recordingPhase === "recording" && (
+                <span className="text-sm font-medium">Recording…</span>
+              )}
+              {recordingPhase === "stopping" && (
+                <span className="text-sm font-medium">Processing…</span>
+              )}
+            </div>
+            {recordingPhase === "recording" ? (
+              <span className="text-sm tabular-nums">
+                {String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:
+                {String(recordingSeconds % 60).padStart(2, "0")}
+              </span>
+            ) : (
+              <span className="text-sm"> </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* File Preview */}
       {uploadedFiles.length > 0 && (
         <motion.div
@@ -439,6 +592,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               ref={fileInputRef}
               onChange={handleFileUpload}
               className="hidden"
+              disabled={isRecording}
             />
             <motion.label
               htmlFor="file-upload"
@@ -463,7 +617,8 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               <Upload className="w-5 h-5" />
             </motion.label>
             <motion.button
-              className="p-2 rounded-lg"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`p-2 rounded-lg ${isRecording ? "text-red-500" : ""}`}
               animate={{
                 color: isDarkMode ? "#9ca3af" : "#6b7280",
                 backgroundColor: "transparent",
@@ -477,7 +632,9 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                 ease: "easeInOut",
               }}
             >
-              <Mic className="w-5 h-5" />
+              <Mic
+                className={`w-5 h-5 ${isRecording ? "animate-pulse" : ""}`}
+              />
             </motion.button>
           </div>
           <motion.input
@@ -498,6 +655,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               duration: 0.6,
               ease: "easeInOut",
             }}
+            disabled={isRecording}
           />
           <motion.button
             onClick={handleSendMessage}
@@ -522,6 +680,9 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
             <span>Send</span>
           </motion.button>
         </div>
+        {recordingError && (
+          <div className="mt-2 text-xs text-red-500">{recordingError}</div>
+        )}
       </motion.div>
     </motion.div>
   );

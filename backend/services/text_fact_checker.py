@@ -12,7 +12,7 @@ class TextFactChecker:
     """Service for fact-checking textual claims using Google Custom Search API with fact-checking sites"""
     
     def __init__(self):
-        self.api_key = config.GOOGLE_FACT_CHECK_API_KEY
+        self.api_key = config.GOOGLE_API_KEY
         self.search_engine_id = config.GOOGLE_FACT_CHECK_CX
         self.base_url = "https://www.googleapis.com/customsearch/v1"
         

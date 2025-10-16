@@ -5,7 +5,7 @@
 The Orchestrator Agent coordinates the complete misinformation detection pipeline by integrating:
 
 1. **Trend Scanner Agent** - Finds trending posts and generates claims/summaries
-2. **Claim Verifier Agent** - Fact-checks the extracted claims  
+2. **Claim Verifier Agent** - Fact-checks the extracted claims
 3. **Orchestrator Agent** - Coordinates the workflow and combines results
 
 ## Architecture Flow
@@ -21,22 +21,26 @@ Reddit Posts → Trend Scanner → Claims Extraction → Claim Verifier → Fina
 ## Pipeline Steps
 
 ### 1. Trend Scanner Phase
+
 - Scans Reddit subreddits for trending posts
 - Sends all posts to Gemini AI for batch processing
 - Generates structured claims and summaries
 - Returns JSON with posts data
 
-### 2. Claims Extraction Phase  
+### 2. Claims Extraction Phase
+
 - Orchestrator extracts verifiable claims from trend results
 - Converts posts data to claim verification format
 - Filters out non-verifiable content
 
 ### 3. Claim Verification Phase
+
 - Sends claims to Claim Verifier Agent
 - Uses Google Custom Search + Gemini AI for fact-checking
 - Returns verification results with verdicts
 
 ### 4. Results Combination Phase
+
 - Combines trend data with verification results
 - Creates final structured output
 - Saves comprehensive results
@@ -44,11 +48,13 @@ Reddit Posts → Trend Scanner → Claims Extraction → Claim Verifier → Fina
 ## Usage
 
 ### Run Complete Pipeline
+
 ```bash
 python run_pipeline.py --mode full
 ```
 
 ### Run Individual Components
+
 ```bash
 # Trend scanning only
 python run_pipeline.py --mode trend-only
@@ -75,7 +81,7 @@ The orchestrator produces a final JSON with this structure:
     {
       "claim": "Government plans to ban social media platforms",
       "summary": "Comprehensive AI-generated summary combining post content and external sources...",
-      "platform": "reddit", 
+      "platform": "reddit",
       "Post_link": "https://reddit.com/r/conspiracy/comments/abc123",
       "verification": {
         "verified": true,
@@ -95,21 +101,24 @@ The orchestrator produces a final JSON with this structure:
 ## Configuration
 
 ### Required Environment Variables
+
 ```env
 # Reddit API
 REDDIT_CLIENT_ID=your_reddit_client_id
 REDDIT_CLIENT_SECRET=your_reddit_client_secret
 
-# Google/Gemini AI  
+# Google/Gemini AI
 GEMINI_API_KEY=your_gemini_api_key
 
 # Fact-checking (for claim verifier)
-GOOGLE_FACT_CHECK_API_KEY=your_google_search_api_key
+GOOGLE_API_KEY=your_google_search_api_key
 GOOGLE_FACT_CHECK_CX=your_custom_search_engine_id
 ```
 
 ### Target Subreddits
+
 Edit `TARGET_SUBREDDITS` in `trend_scanner_agent.py`:
+
 ```python
 TARGET_SUBREDDITS = [
     'NoFilterNews',
@@ -130,7 +139,7 @@ TARGET_SUBREDDITS = [
 │   ├── agents.py                  # Verification agents
 │   ├── tools.py                   # TextFactChecker
 │   └── config.py                  # Configuration
-├── trend_scanner/                 # Trend scanner package  
+├── trend_scanner/                 # Trend scanner package
 │   ├── google_agents.py           # Google Agents orchestration
 │   └── tools.py                   # Reddit scanning tools
 ├── orchestrator_results/          # Orchestrator output files
@@ -141,6 +150,7 @@ TARGET_SUBREDDITS = [
 ## Session Management
 
 Each orchestrator run creates:
+
 - Unique session ID with timestamp
 - Comprehensive result files in `orchestrator_results/`
 - Individual component logs
@@ -149,14 +159,16 @@ Each orchestrator run creates:
 ## Error Handling
 
 The orchestrator includes robust error handling:
+
 - **Trend Scanner Fails**: Returns empty results, continues gracefully
-- **No Claims Found**: Skips verification, returns trend data only  
+- **No Claims Found**: Skips verification, returns trend data only
 - **Claim Verifier Fails**: Returns trend data with "not_verified" status
 - **API Failures**: Falls back to basic processing where possible
 
 ## Monitoring
 
 Logs are written to:
+
 - `orchestrator.log` - Main orchestrator operations
 - `claim_verifier.log` - Claim verification details
 - `trend_scanner.log.txt` - Trend scanning operations
@@ -171,7 +183,8 @@ Logs are written to:
 ## Integration
 
 The orchestrator is designed to be:
-- **API-friendly**: Can be called programmatically  
+
+- **API-friendly**: Can be called programmatically
 - **Webhook-ready**: Easy to integrate with external systems
 - **Scalable**: Can handle varying numbers of posts
 - **Extensible**: Easy to add new verification sources or scanners

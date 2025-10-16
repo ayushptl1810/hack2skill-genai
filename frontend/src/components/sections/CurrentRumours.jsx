@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import RumourCard from "../ui/RumourCard";
 import RumourModal from "../ui/RumourModal";
 import MotionText from "../ui/MotionText";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { getApiBaseUrl, getWsUrl } from "../../config/api";
 import mockRumoursData from "../../data/mockRumours.json";
 
 // Transform MongoDB data to match frontend expectations
@@ -155,33 +156,12 @@ const CurrentRumours = ({ isDarkMode }) => {
   }, []);
 
   // Derive WebSocket URL robustly without hardcoding
-  const computeWsUrl = () => {
-    const envWs = import.meta.env.VITE_WS_URL;
-    if (envWs && typeof envWs === "string")
-      return envWs.endsWith("/ws") ? envWs : `${envWs.replace(/\/$/, "")}/ws`;
-
-    const apiBase = import.meta.env.VITE_API_BASE_URL;
-    if (apiBase && typeof apiBase === "string") {
-      const protocol = apiBase.startsWith("https") ? "wss" : "ws";
-      const host = apiBase.replace(/^https?:\/\//, "").replace(/\/$/, "");
-      return `${protocol}://${host}/ws`;
-    }
-
-    // Fallback to window.location for dev if no envs set
-    const loc = window.location;
-    const protocol = loc.protocol === "https:" ? "wss" : "ws";
-    const host = loc.host; // includes hostname:port
-    return `${protocol}://${host}/ws`;
-  };
+  const computeWsUrl = () => getWsUrl();
 
   const wsUrl = computeWsUrl();
 
   // Initialize WebSocket connection
-  const {
-    isConnected,
-    error: wsError,
-    reconnect,
-  } = useWebSocket(wsUrl, {
+  useWebSocket(wsUrl, {
     onOpen: handleWebSocketOpen,
     onClose: handleWebSocketClose,
     onMessage: handleWebSocketMessage,
@@ -196,25 +176,7 @@ const CurrentRumours = ({ isDarkMode }) => {
       setError(null);
 
       // Derive HTTP API base similarly to WS without hardcoding
-      const computeApiBaseUrl = () => {
-        const apiBase = import.meta.env.VITE_API_BASE_URL;
-        if (apiBase && typeof apiBase === "string") {
-          return apiBase.replace(/\/$/, "");
-        }
-        // If we have an absolute wsUrl, derive HTTP base from it to avoid hitting the Vite dev origin
-        try {
-          const urlObj = new URL(wsUrl, window.location.href);
-          if (urlObj.host) {
-            const httpProtocol =
-              urlObj.protocol === "wss:" ? "https:" : "http:";
-            return `${httpProtocol}//${urlObj.host}`;
-          }
-        } catch {}
-        // Fallback to current origin
-        return window.location.origin;
-      };
-
-      const apiUrl = `${computeApiBaseUrl()}/mongodb/recent-posts?limit=5`;
+      const apiUrl = `${getApiBaseUrl()}/mongodb/recent-posts?limit=5`;
       console.log("🔍 DEBUG: Making request to:", apiUrl);
 
       const response = await fetch(apiUrl);
@@ -409,67 +371,7 @@ const CurrentRumours = ({ isDarkMode }) => {
           )}
         </motion.div>
 
-        {/* Manual Refresh Button with Status */}
-        <div className="flex items-center justify-between mt-4">
-          {/* Connection Status and Last Update */}
-          <div className="flex items-center space-x-3">
-            {/* Real-time Status */}
-            <div className="flex items-center space-x-1">
-              {isConnected ? (
-                <Wifi className="w-4 h-4 text-green-500" />
-              ) : (
-                <WifiOff className="w-4 h-4 text-red-500" />
-              )}
-              <MotionText
-                className="text-xs"
-                isDarkMode={isDarkMode}
-                darkColor={isConnected ? "#10b981" : "#ef4444"}
-                lightColor={isConnected ? "#059669" : "#dc2626"}
-              >
-                {isConnected ? "Live" : "Offline"}
-              </MotionText>
-            </div>
-
-            {/* Last Update Time */}
-            {lastUpdateTime && (
-              <MotionText
-                className="text-xs"
-                isDarkMode={isDarkMode}
-                darkColor="#9ca3af"
-                lightColor="#6b7280"
-              >
-                Updated {lastUpdateTime.toLocaleTimeString()}
-              </MotionText>
-            )}
-
-            {/* Reconnect Button (when disconnected) */}
-            {!isConnected && (
-              <button
-                onClick={reconnect}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                title="Reconnect"
-              >
-                <RefreshCw className="w-3 h-3 text-gray-500" />
-              </button>
-            )}
-          </div>
-
-          {/* Manual Refresh Button */}
-          <button
-            onClick={fetchRecentPosts}
-            disabled={isLoading}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isDarkMode
-                ? "bg-gray-700 hover:bg-gray-600 text-gray-200 disabled:opacity-50"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
-            }`}
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            <span>{isLoading ? "Refreshing..." : "Refresh"}</span>
-          </button>
-        </div>
+        {/* Footer controls removed: WebSocket now handles live updates */}
       </motion.div>
 
       {/* Modal */}

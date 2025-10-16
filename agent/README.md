@@ -26,6 +26,7 @@ Project Aegis is a comprehensive misinformation detection pipeline that combines
 ### 🎪 Mumbai Hacks Project
 
 This project was developed for **Mumbai Hacks**, featuring a complete automated pipeline that:
+
 - **Scans Reddit** for trending posts across multiple subreddits
 - **Generates AI summaries** and extracts claims using Google Gemini
 - **Fact-checks claims** against reliable sources with automated verification
@@ -34,6 +35,7 @@ This project was developed for **Mumbai Hacks**, featuring a complete automated 
 ### 🔍 Problem Statement
 
 With the rapid spread of misinformation on social media, there's a critical need for automated systems that can:
+
 - **Detect trending content** before it goes viral
 - **Extract and verify claims** automatically using AI
 - **Provide comprehensive fact-checking** with reliable sources
@@ -66,7 +68,7 @@ With the rapid spread of misinformation on social media, there's a critical need
             ┌───────────────────────────┼───────────────────────────┐
             │                           │                           │
             ▼                           ▼                           ▼
-    
+
 ┌──────────────────┐            ┌──────────────────┐            ┌─────────────────────┐
 │  TREND SCANNER   │            │ CLAIM VERIFIER   │            │  EXPLANATION AGENT  │
 │      AGENT       │            │     AGENT        │            │                     │
@@ -79,7 +81,7 @@ With the rapid spread of misinformation on social media, there's a critical need
          │                               │                               │
          │ data flow                     │ data flow                     │ data flow
          ▼                               ▼                               ▼
-    
+
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                              DATA FLOW SEQUENCE                                     │
 │                                                                                     │
@@ -110,6 +112,7 @@ With the rapid spread of misinformation on social media, there's a critical need
 ## ✨ Key Features
 
 ### 🤖 **AI-Powered Complete Pipeline**
+
 - **Google Gemini 2.5 Flash** - Latest AI model for content analysis and summarization
 - **Automated Claim Extraction** - AI identifies verifiable claims from posts
 - **Comprehensive Fact-Checking** - Google Custom Search + AI analysis
@@ -117,6 +120,7 @@ With the rapid spread of misinformation on social media, there's a critical need
 - **End-to-End Automation** - Complete pipeline from detection to verification
 
 ### 📊 **Real-Time Detection & Verification**
+
 - **Live Reddit Scanning** - Continuous monitoring of multiple subreddits
 - **Velocity Tracking** - Detection of rapidly trending posts
 - **Automated Fact-Checking** - Real-time verification against reliable sources
@@ -126,12 +130,14 @@ With the rapid spread of misinformation on social media, there's a critical need
 ### 🛠️ **Complete Technology Stack**
 
 #### 🤖 **AI & Machine Learning**
+
 - **Google Gemini 2.5 Flash** - Advanced multimodal AI for content analysis, summarization, and claim extraction
 - **Google Generative AI SDK** - Primary AI interface for content processing
 - **LiteLLM** - Multi-provider LLM integration and fallback handling
 - **Batch Processing** - Optimized AI workflows reducing API calls by 90%
 
 #### 🌐 **Web Scraping & Content Extraction**
+
 - **Beautiful Soup 4** - HTML/XML parsing and content extraction
 - **Newspaper3K** - Article extraction and natural language processing
 - **Trafilatura** - Web text extraction with content cleaning
@@ -140,6 +146,7 @@ With the rapid spread of misinformation on social media, there's a critical need
 - **Feedparser** - RSS/Atom feed parsing and monitoring
 
 #### 🔍 **Data Sources & APIs**
+
 - **PRAW (Python Reddit API Wrapper)** - Reddit content monitoring and extraction
 - **Google Custom Search API** - Fact-checking and source verification
 - **Google API Python Client** - Google services integration
@@ -147,11 +154,13 @@ With the rapid spread of misinformation on social media, there's a critical need
 - **RSS/Atom Feeds** - Real-time content monitoring
 
 #### 🗄️ **Data Management & Storage**
+
 - **PyMongo** - MongoDB integration for data persistence
 - **JSON Processing** - Structured data handling and output formatting
 - **File-based Caching** - URL processing cache and ground truth storage
 
 #### 🛠️ **Development & Infrastructure**
+
 - **Python 3.8+** - Core programming language
 - **Google Auth** - Authentication for Google services
 - **Python-dotenv** - Environment configuration management
@@ -159,12 +168,14 @@ With the rapid spread of misinformation on social media, there's a critical need
 - **Comprehensive Logging** - Full audit trail and debugging support
 
 #### 🏗️ **Architecture & Frameworks**
+
 - **Google Agents SDK** - Multi-agent orchestration and workflow management
 - **Multi-Agent Pattern** - Specialized agents for different pipeline stages
 - **Batch Processing Architecture** - Efficient resource utilization
 - **Modular Design** - Separated concerns with independent agent modules
 
 ### 🎯 **Configurable Targeting**
+
 ### 🎯 **Configurable Targeting**
 
 - **Multi-Subreddit Support** - Scan multiple communities simultaneously
@@ -184,18 +195,21 @@ With the rapid spread of misinformation on social media, there's a critical need
 ### ⚡ Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd MumbaiHacks
    ```
 
 2. **Create virtual environment**
+
    ```bash
    python -m venv myenv
    source myenv/bin/activate  # On Windows: myenv\Scripts\activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -209,18 +223,20 @@ With the rapid spread of misinformation on social media, there's a critical need
 ### 🏃‍♂️ Quick Run
 
 **Complete Pipeline (Recommended)**
+
 ```bash
 python run_pipeline.py --mode full
 ```
 
 **Individual Components**
+
 ```bash
 # Trend scanning only
 python run_pipeline.py --mode trend-only
 
 # Or run components directly
 python orchestrator_agent.py           # Full orchestrator
-python trend_scanner_agent.py          # Trend scanning + AI summarization  
+python trend_scanner_agent.py          # Trend scanning + AI summarization
 python claim_verifier_agent.py --operation verify-claim --claim "Your claim"
 ```
 
@@ -257,6 +273,7 @@ The system outputs structured JSON with verified claims:
 ### 1. **🎼 Orchestrator Agent** (`orchestrator_agent.py`)
 
 **The Central Command Center**
+
 - **Workflow Coordination** - Manages complete pipeline from trend scanning to fact-checking
 - **Multi-Agent Communication** - Coordinates between all specialized agents
 - **Batch Processing Controller** - Optimizes API calls through intelligent batching
@@ -265,6 +282,7 @@ The system outputs structured JSON with verified claims:
 - **Error Handling** - Robust fallback mechanisms and retry logic
 
 **Key Features:**
+
 - Google Agents SDK integration for workflow orchestration
 - Async/await execution for optimal performance
 - Comprehensive debugging and monitoring capabilities
@@ -273,6 +291,7 @@ The system outputs structured JSON with verified claims:
 ### 2. **🔍 Trend Scanner Agent** (`trend_scanner_agent.py`)
 
 **Multi-Platform Content Monitor**
+
 - **Reddit API Integration** (`trend_scanner/tools.py`) - Live post monitoring across multiple subreddits
 - **Web Content Scraper** (`trend_scanner/scraper.py`) - External link analysis and content extraction
 - **AI-Powered Analysis** (`trend_scanner/google_agents.py`) - Gemini 2.5 Flash for content summarization
@@ -280,18 +299,21 @@ The system outputs structured JSON with verified claims:
 - **Risk Assessment Engine** - Intelligent scoring for misinformation likelihood
 
 **Scraping Capabilities:**
+
 - **Reddit Posts** - Title, content, metadata, engagement metrics
 - **External Links** - Article content, images, metadata extraction
 - **RSS/Atom Feeds** - Real-time news monitoring
 - **Web Pages** - Full content extraction with readability optimization
 
 **Data Models:** (`trend_scanner/models.py`)
+
 - Structured data classes for posts, trends, and analysis results
 - Standardized format for multi-platform content
 
 ### 3. **✅ Claim Verifier Agent** (`claim_verifier_agent.py`)
 
 **Comprehensive Fact-Checking System**
+
 - **Google Custom Search Integration** (`claim_verifier/tools.py`) - Searches across trusted fact-checking sources
 - **Multi-Agent Verification** (`claim_verifier/agents.py`) - Specialized verification workflows
 - **Source Credibility Analysis** - Evaluates reliability of fact-checking sources
@@ -299,6 +321,7 @@ The system outputs structured JSON with verified claims:
 - **Evidence Aggregation** - Combines multiple sources for comprehensive verification
 
 **Verification Sources:**
+
 - Snopes.com - Myth-busting and urban legend verification
 - PolitiFact.com - Political fact-checking
 - FactCheck.org - Nonpartisan fact verification
@@ -306,6 +329,7 @@ The system outputs structured JSON with verified claims:
 - AP Fact Check - Associated Press verification
 
 **Configuration:** (`claim_verifier/config.py`)
+
 - Customizable verification parameters
 - Source weighting and reliability scoring
 - API rate limiting and optimization
@@ -313,6 +337,7 @@ The system outputs structured JSON with verified claims:
 ### 4. **📝 Explanation Agent** (`explanation_agent_agent.py`)
 
 **Automated Debunk Content Generator**
+
 - **Educational Post Creation** (`explanation_agent/agents.py`) - Generates clear, factual explanations
 - **Batch Content Generation** - Creates up to 10 debunk posts simultaneously
 - **Source Integration** - Incorporates verification evidence into explanations
@@ -320,12 +345,14 @@ The system outputs structured JSON with verified claims:
 - **Structured Output** - JSON format ready for social media posting
 
 **Content Types:**
+
 - Debunk posts with clear factual corrections
 - Educational content explaining why claims are false
 - Source citations and evidence presentation
 - Actionable recommendations for content moderators
 
 **Configuration:** (`explanation_agent/config.py`)
+
 - Content template customization
 - Tone and style parameters
 - Source citation formatting
@@ -333,6 +360,7 @@ The system outputs structured JSON with verified claims:
 ### 5. **🌐 Web Content Extraction Pipeline**
 
 **Advanced Scraping Infrastructure**
+
 - **Beautiful Soup 4** - HTML parsing and DOM manipulation
 - **Newspaper3K** - Article extraction with NLP preprocessing
 - **Trafilatura** - Clean text extraction from web pages
@@ -340,6 +368,7 @@ The system outputs structured JSON with verified claims:
 - **Custom Scrapers** - Platform-specific extraction logic
 
 **Supported Content Types:**
+
 - News articles and blog posts
 - Social media embedded content
 - PDF documents and academic papers
@@ -349,12 +378,14 @@ The system outputs structured JSON with verified claims:
 ### 6. **🗄️ Data Management Layer**
 
 **Intelligent Caching and Storage**
+
 - **Processed URLs Cache** (`data/processed_urls.json`) - Prevents duplicate processing
 - **Ground Truth Storage** (`data/ground_truth_articles.json`) - Validation dataset
 - **Result Archives** - Historical data for trend analysis
 - **Performance Metrics** - Processing time and accuracy tracking
 
 **Data Flow:**
+
 ```
 Input Sources → Content Extraction → AI Analysis → Verification → Output Generation
      ↓              ↓                   ↓            ↓             ↓
@@ -368,7 +399,7 @@ Cache Check → Scraping Cache → Analysis Cache → Fact Cache → Result Stor
 Create a `.env` file in the project root:
 
 ```env
-# Google AI Configuration  
+# Google AI Configuration
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # Reddit API Configuration
@@ -376,7 +407,7 @@ REDDIT_CLIENT_ID=your_reddit_client_id
 REDDIT_CLIENT_SECRET=your_reddit_client_secret
 
 # Fact-Checking APIs
-GOOGLE_FACT_CHECK_API_KEY=your_google_search_api_key
+GOOGLE_API_KEY=your_google_search_api_key
 GOOGLE_FACT_CHECK_CX=your_custom_search_engine_id
 
 ]
@@ -419,7 +450,7 @@ The complete pipeline produces structured JSON output with four key components p
       "Post_link": "https://reddit.com/r/subreddit/comments/postid",
       "verification": {
         "verified": true,
-        "verdict": "false|true|mixed|uncertain", 
+        "verdict": "false|true|mixed|uncertain",
         "message": "Human-readable verification result",
         "details": {
           "confidence": "high|medium|low",
@@ -444,6 +475,7 @@ The complete pipeline produces structured JSON output with four key components p
 ### **Integration-Ready Format**
 
 The output is designed for easy integration with:
+
 - **Content moderation systems**
 - **Social media monitoring tools**
 - **Fact-checking platforms**
@@ -485,11 +517,11 @@ The system provides structured JSON output with:
 
 ### 📈 **Risk Levels**
 
-| Level | Description | Action Required |
-|-------|-------------|-----------------|
-| **HIGH** | Likely misinformation, conspiracy theories, unverified claims | Immediate investigation |
-| **MEDIUM** | Potentially misleading, lacks sources, emotional manipulation | Monitor closely |
-| **LOW** | Factual content, well-sourced, clearly opinion-based | Routine monitoring |
+| Level      | Description                                                   | Action Required         |
+| ---------- | ------------------------------------------------------------- | ----------------------- |
+| **HIGH**   | Likely misinformation, conspiracy theories, unverified claims | Immediate investigation |
+| **MEDIUM** | Potentially misleading, lacks sources, emotional manipulation | Monitor closely         |
+| **LOW**    | Factual content, well-sourced, clearly opinion-based          | Routine monitoring      |
 
 ## 🔧 Advanced Features
 
@@ -529,12 +561,12 @@ Powered by Google Agents SDK:
 
 ### ⚡ **Speed Benchmarks**
 
-| Operation | Before Optimization | After Optimization | Improvement |
-|-----------|-------------------|-------------------|-------------|
-| Risk Assessment | 20+ API calls | 1 API call | **95% reduction** |
-| Processing Time | 15-30 seconds | 2-5 seconds | **80% faster** |
-| API Costs | $0.50+ per scan | $0.03 per scan | **94% savings** |
-| Throughput | 20 posts/minute | 200+ posts/minute | **10x increase** |
+| Operation       | Before Optimization | After Optimization | Improvement       |
+| --------------- | ------------------- | ------------------ | ----------------- |
+| Risk Assessment | 20+ API calls       | 1 API call         | **95% reduction** |
+| Processing Time | 15-30 seconds       | 2-5 seconds        | **80% faster**    |
+| API Costs       | $0.50+ per scan     | $0.03 per scan     | **94% savings**   |
+| Throughput      | 20 posts/minute     | 200+ posts/minute  | **10x increase**  |
 
 ### 🎯 **Accuracy Metrics**
 
@@ -548,11 +580,13 @@ Powered by Google Agents SDK:
 We welcome contributions to Project Aegis! Here's how you can help:
 
 ### 🐛 **Bug Reports**
+
 - Use GitHub Issues to report bugs
 - Include detailed reproduction steps
 - Provide system information and logs
 
 ### 💡 **Feature Requests**
+
 - Suggest new features through GitHub Issues
 - Explain the use case and expected behavior
 - Consider implementation complexity
@@ -650,21 +684,25 @@ MumbaiHacks/                                    # 🚀 Project Aegis Root
 ### 🎯 **Key Architecture Elements**
 
 #### **🎼 Multi-Agent Orchestration**
+
 - **Orchestrator Agent** - Central coordination and workflow management
 - **Specialized Agents** - Focused expertise for each pipeline stage
 - **Google Agents SDK** - Professional multi-agent framework
 
 #### **🔍 Content Analysis Pipeline**
+
 - **Trend Scanner** - Multi-platform monitoring (Reddit, RSS, Web)
 - **Content Scraper** - Web extraction with multiple parsing engines
 - **AI Summarization** - Gemini 2.5 Flash for intelligent analysis
 
 #### **✅ Verification Infrastructure**
+
 - **Claim Verifier** - Google Custom Search integration
 - **Fact-Checking Sources** - Trusted verification databases
 - **Evidence Aggregation** - Multi-source reliability scoring
 
 #### **📝 Response Generation**
+
 - **Explanation Agent** - Automated debunk post creation
 - **Batch Processing** - Efficient AI content generation
 - **Educational Content** - Clear, factual explanations
@@ -672,18 +710,21 @@ MumbaiHacks/                                    # 🚀 Project Aegis Root
 ## 🔮 Future Roadmap
 
 ### 🎯 **Short Term (Q1 2026)**
+
 - [ ] **Twitter/X Integration** - Expand beyond Reddit
 - [ ] **Real-time Dashboard** - Web-based monitoring interface
 - [ ] **API Endpoints** - REST API for external integrations
 - [ ] **Custom Model Training** - Domain-specific misinformation detection
 
 ### 🚀 **Medium Term (Q2-Q3 2026)**
+
 - [ ] **Multi-language Support** - Analysis in multiple languages
 - [ ] **Video Content Analysis** - YouTube and TikTok integration
 - [ ] **Network Analysis** - Social media influence tracking
 - [ ] **Automated Fact-checking** - Integration with fact-checking APIs
 
 ### 🌟 **Long Term (Q4 2026+)**
+
 - [ ] **Predictive Modeling** - Forecast viral misinformation
 - [ ] **Cross-platform Correlation** - Track misinformation across platforms
 - [ ] **Public API** - Open access for researchers and developers
@@ -692,16 +733,19 @@ MumbaiHacks/                                    # 🚀 Project Aegis Root
 ## 📊 Mumbai Hacks Achievements
 
 ### 🏆 **Technical Innovation**
+
 - **Advanced AI Integration** - First implementation using Gemini 2.5 Flash for social media analysis
 - **Batch Processing Optimization** - 95% reduction in API calls through intelligent batching
 - **Multi-Agent Architecture** - Sophisticated workflow orchestration using Google Agents SDK
 
 ### 🎯 **Social Impact**
+
 - **Early Detection** - Identify misinformation before it goes viral
 - **Scalable Solution** - Architecture designed for real-world deployment
 - **Open Source** - Contributing to the global fight against misinformation
 
 ### 💡 **Innovation Highlights**
+
 - **Real-time Processing** - Sub-5-second analysis of trending content
 - **Context-Aware AI** - Understanding of social and political nuances
 - **Actionable Intelligence** - Clear recommendations for content moderators
@@ -727,4 +771,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **🚀 Project Aegis - Defending Truth in the Digital Age**
 
-*Built with ❤️ for Mumbai Hacks | Powered by Google Gemini 2.5 Flash*
+_Built with ❤️ for Mumbai Hacks | Powered by Google Gemini 2.5 Flash_

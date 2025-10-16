@@ -14,7 +14,7 @@ A comprehensive fact-checking and claim verification system built with Google Ag
 ### Agent Roles
 
 - **Claim Extraction Specialist**: Extracts verifiable claims from content
-- **Fact Verification Specialist**: Verifies claims against reliable sources  
+- **Fact Verification Specialist**: Verifies claims against reliable sources
 - **Priority Assessment Specialist**: Prioritizes claims based on risk and impact
 - **Report Generation Specialist**: Creates comprehensive fact-checking reports
 
@@ -43,7 +43,7 @@ Create a `.env` file with the following variables:
 
 ```env
 # Google Custom Search API (required)
-GOOGLE_FACT_CHECK_API_KEY=your_google_api_key
+GOOGLE_API_KEY=your_google_api_key
 GOOGLE_FACT_CHECK_CX=your_custom_search_engine_id
 
 # Gemini API (required)
@@ -53,6 +53,7 @@ GEMINI_API_KEY=your_gemini_api_key
 ### 3. Google Custom Search Setup
 
 1. **Create a Custom Search Engine**:
+
    - Visit: https://cse.google.com/cse/
    - Click "Add" to create a new search engine
    - Configure to search fact-checking sites:
@@ -64,6 +65,7 @@ GEMINI_API_KEY=your_gemini_api_key
      - And other reliable fact-checking sources
 
 2. **Get your Search Engine ID (cx)**:
+
    - In your custom search engine settings
    - Copy the "Search engine ID"
 
@@ -102,13 +104,13 @@ from claim_verifier import TextFactChecker
 
 async def check_claim():
     fact_checker = TextFactChecker()
-    
+
     result = await fact_checker.verify(
         text_input="COVID-19 vaccines contain microchips",
         claim_context="Social media post",
         claim_date="2024-01-15"
     )
-    
+
     print(f"Verdict: {result['verdict']}")
     print(f"Verified: {result['verified']}")
     print(f"Message: {result['message']}")
@@ -126,7 +128,7 @@ async def agent_workflow():
     # Initialize agent
     agent = ClaimVerifierAgent()
     await agent.initialize()
-    
+
     # Verify content from various sources
     content_data = [
         {
@@ -135,7 +137,7 @@ async def agent_workflow():
             "source": "UnverifiedNews.com"
         }
     ]
-    
+
     result = await agent.verify_content_list(content_data)
     print(f"Success: {result['success']}")
     print(f"Claims verified: {result['summary']['claims_verified']}")
@@ -152,15 +154,15 @@ from claim_verifier import ClaimVerifierOrchestrator
 async def orchestrated_verification():
     # Initialize orchestrator
     orchestrator = ClaimVerifierOrchestrator()
-    
+
     # Process multiple content items with full workflow
     content_data = [
         {"title": "News Article 1", "content": "Content with claims..."},
         {"title": "Social Media Post", "content": "Viral claim about..."}
     ]
-    
+
     result = await orchestrator.verify_content(content_data)
-    
+
     # Access workflow results
     for step_result in result['workflow_results']:
         print(f"Agent: {step_result['agent_role']}")
@@ -178,23 +180,23 @@ from claim_verifier_agent import ClaimVerifierAgent
 
 async def integrate_with_trend_scanner(reddit_posts):
     """Integrate claim verification with trend scanner"""
-    
+
     agent = ClaimVerifierAgent()
     await agent.initialize()
-    
+
     # Verify Reddit posts detected by trend scanner
     result = await agent.verify_reddit_posts(reddit_posts)
-    
+
     if result['success']:
         summary = result['summary']
         high_priority = summary['high_priority_claims']
-        
+
         if high_priority > 0:
             print(f"⚠️ {high_priority} high-priority claims detected!")
             print("Flagging for manual review...")
-            
+
         return result
-    
+
     return None
 
 # Example usage in trend scanner
@@ -209,20 +211,20 @@ from claim_verifier import TextFactChecker
 
 async def detailed_fact_check():
     fact_checker = TextFactChecker()
-    
+
     # Check a complex claim
     result = await fact_checker.verify(
         text_input="Scientists have proven that climate change is a natural cycle unrelated to human activity",
         claim_context="Online article",
         claim_date="2024-03-20"
     )
-    
+
     # Access detailed analysis
     analysis = result['details']['analysis']
     print(f"Confidence: {analysis['confidence']}")
     print(f"Reasoning: {analysis['reasoning']}")
     print(f"Sources found: {len(result['details']['fact_checks'])}")
-    
+
     # Review fact-check sources
     for source in result['details']['fact_checks'][:3]:
         print(f"- {source['title']}")
@@ -303,7 +305,7 @@ The agent system produces comprehensive output files with the following structur
             "timestamp": "2024-01-15T10:30:00"
         },
         {
-            "agent_role": "Fact Verification Specialist", 
+            "agent_role": "Fact Verification Specialist",
             "task": "verify_claims",
             "result": {
                 "verified_claims": [...],
@@ -397,10 +399,10 @@ async def enhanced_scanning():
     # Initialize components
     orchestrator = TrendScannerOrchestrator(reddit_config)
     fact_checker = TextFactChecker()
-    
+
     # Scan for trending posts
     results = orchestrator.scan_trending_content()
-    
+
     # Fact-check high-risk posts
     for post in results['trending_posts']:
         if post['risk_level'] == 'HIGH':
@@ -409,7 +411,7 @@ async def enhanced_scanning():
                 claim_context=f"Reddit post from r/{post['subreddit']}",
                 claim_date=post.get('created_date', 'Unknown')
             )
-            
+
             post['fact_check'] = verification
             print(f"Post: {post['title']}")
             print(f"Fact-check verdict: {verification['verdict']}")

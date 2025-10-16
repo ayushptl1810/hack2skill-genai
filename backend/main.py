@@ -10,6 +10,8 @@ from pathlib import Path
 import asyncio
 import logging
 import json
+import base64
+import requests
 
 from services.image_verifier import ImageVerifier
 from services.video_verifier import VideoVerifier
@@ -500,6 +502,71 @@ async def get_recent_debunk_posts(limit: int = 5):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "visual-verification"}
+
+
+@app.post("/speech-to-text")
+async def speech_to_text(
+    audio: UploadFile = File(...),
+    language_code: str = Form("en-US")
+):
+    """Proxy uploaded audio to Google Speech-to-Text and return transcript.
+
+    Accepts WEBM/OPUS, OGG/OPUS, or WAV/LINEAR16. For browser recordings via
+    MediaRecorder the typical format is WEBM/OPUS which is supported by Google.
+    """
+    try:
+        if not config.GOOGLE_API_KEY:
+            raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not configured")
+
+        # Read audio bytes and base64-encode for Google API
+        audio_bytes = await audio.read()
+        if not audio_bytes:
+            raise HTTPException(status_code=400, detail="Empty audio payload")
+
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+        # Infer encoding for common browser uploads; default to WEBM_OPUS if unknown
+        content_type = (audio.content_type or "").lower()
+        if "wav" in content_type or "x-wav" in content_type or "linear16" in content_type:
+            encoding = "LINEAR16"
+        elif "ogg" in content_type:
+            encoding = "OGG_OPUS"
+        else:
+            encoding = "WEBM_OPUS"
+
+        # Build request to Google Speech-to-Text v1 REST API
+        endpoint = f"https://speech.googleapis.com/v1/speech:recognize?key={config.GOOGLE_API_KEY}"
+        payload = {
+            "config": {
+                "encoding": encoding,
+                "languageCode": language_code,
+                # Enable auto punctuation; leave other options default to keep generalized
+                "enableAutomaticPunctuation": True
+            },
+            "audio": {"content": audio_b64}
+        }
+
+        resp = requests.post(endpoint, json=payload, timeout=30)
+        if resp.status_code != 200:
+            detail = resp.text
+            raise HTTPException(status_code=resp.status_code, detail=detail)
+
+        data = resp.json()
+        # Extract the best transcript
+        transcript = ""
+        if isinstance(data, dict):
+            results = data.get("results") or []
+            if results:
+                alts = results[0].get("alternatives") or []
+                if alts:
+                    transcript = (alts[0].get("transcript") or "").strip()
+
+        return {"transcript": transcript, "raw": data}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Educational Content API Endpoints
