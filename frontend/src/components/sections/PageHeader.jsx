@@ -9,10 +9,12 @@ const PageHeader = ({
   setIsDarkMode,
   showBackButton = false,
   onBack,
+  showMenuButton = false,
+  onToggleSidebar,
 }) => {
   return (
     <motion.div
-      className={`p-6 border-b ${
+      className={`px-4 sm:px-6 py-4 sm:py-6 border-b ${
         isDarkMode ? "border-gray-700" : "border-gray-200"
       }`}
       animate={{
@@ -26,6 +28,33 @@ const PageHeader = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          {showMenuButton && (
+            <motion.button
+              onClick={onToggleSidebar}
+              className={`p-2 rounded-lg ${
+                isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+              } lg:hidden`}
+              whileHover={{
+                backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+              }}
+              aria-label="Open menu"
+            >
+              {/* Simple hamburger icon */}
+              <div
+                className={`space-y-1 ${
+                  isDarkMode ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                <div className="w-5 h-0.5 bg-current" />
+                <div className="w-5 h-0.5 bg-current" />
+                <div className="w-5 h-0.5 bg-current" />
+              </div>
+            </motion.button>
+          )}
           {showBackButton && (
             <motion.button
               onClick={onBack}

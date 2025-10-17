@@ -37,18 +37,27 @@ const SidebarNavigation = ({
       className="p-4 space-y-2"
     >
       {/* Chatbot Link */}
-      <MotionButton
-        onClick={onFactCheckClick}
-        className="w-full flex items-center space-x-3 p-3 rounded-lg"
-        isDarkMode={isDarkMode}
-        darkBackgroundColor="transparent"
-        lightBackgroundColor="transparent"
-        darkColor="#d1d5db"
-        lightColor="#374151"
-      >
-        <MessageSquare className="w-5 h-5" />
-        <span>Fact Check</span>
-      </MotionButton>
+      {(() => {
+        const isActive = currentView === "chatbot";
+        const activeBg = isDarkMode ? "#7f1d1d" : "#fee2e2"; // red dark/light
+        const activeColor = isDarkMode ? "#fecaca" : "#b91c1c"; // red text
+        const inactiveBg = "transparent";
+        const inactiveColor = isDarkMode ? "#d1d5db" : "#374151";
+        return (
+          <MotionButton
+            onClick={onFactCheckClick}
+            className="w-full flex items-center space-x-3 p-3 rounded-lg"
+            isDarkMode={isDarkMode}
+            darkBackgroundColor={isActive ? activeBg : inactiveBg}
+            lightBackgroundColor={isActive ? activeBg : inactiveBg}
+            darkColor={isActive ? activeColor : inactiveColor}
+            lightColor={isActive ? activeColor : inactiveColor}
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span>Fact Check</span>
+          </MotionButton>
+        );
+      })()}
 
       {/* Existing Navigation Items */}
       {navItems.map((item) => {

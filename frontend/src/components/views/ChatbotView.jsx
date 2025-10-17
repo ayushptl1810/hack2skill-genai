@@ -262,7 +262,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
       }}
     >
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
         {messages.map((message) => (
           <motion.div
             key={message.id}
@@ -495,7 +495,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
 
       {/* Recording Banner */}
       {isRecording && (
-        <div className="px-6">
+        <div className="px-4 sm:px-6">
           <div
             className="mt-2 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-white"
             style={{ backgroundColor: "#b91c1c" }}
@@ -532,7 +532,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
       {/* File Preview */}
       {uploadedFiles.length > 0 && (
         <motion.div
-          className="px-6 py-2"
+          className="px-4 sm:px-6 py-2"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -573,7 +573,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
 
       {/* Input Area */}
       <motion.div
-        className={`border-t px-6 py-4 ${
+        className={`border-t px-4 sm:px-6 py-4 ${
           isDarkMode ? "border-gray-700" : "border-gray-200"
         }`}
         animate={{

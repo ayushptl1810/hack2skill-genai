@@ -25,7 +25,7 @@ const ContentView = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
-      className="max-w-4xl mx-auto"
+      className="max-w-4xl mx-auto px-4 sm:px-6"
     >
       <ModuleHeader
         moduleContent={moduleContent}

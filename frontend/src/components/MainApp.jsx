@@ -26,11 +26,22 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
   });
   const [expandedSections, setExpandedSections] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Load modules on component mount
+  // Handle responsive sidebar default state and load modules
   useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleMediaChange = (e) => {
+      setIsLargeScreen(e.matches);
+      setSidebarOpen(e.matches); // open on large screens, closed on small by default
+    };
+    handleMediaChange(media);
+    media.addEventListener("change", handleMediaChange);
+
     loadModules();
+
+    return () => media.removeEventListener("change", handleMediaChange);
   }, []);
 
   const loadModules = async () => {
@@ -203,13 +214,20 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
         ease: "easeInOut",
       }}
     >
-      {/* Sidebar - Always visible */}
+      {/* Sidebar */}
       <motion.div
-        className={`${sidebarOpen ? "w-80" : "w-16"} ${
-          isDarkMode
-            ? "bg-gray-800 border-gray-700"
-            : "bg-white border-gray-200"
-        } border-r flex flex-col`}
+        className={`
+          ${isLargeScreen ? "relative" : "fixed inset-y-0 left-0 z-40"}
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          transform transition-transform duration-300 ease-in-out
+          ${isLargeScreen ? (sidebarOpen ? "w-80" : "w-16") : "w-80"}
+          ${
+            isDarkMode
+              ? "bg-gray-800 border-gray-700"
+              : "bg-white border-gray-200"
+          }
+          border-r flex flex-col
+        `}
         animate={{
           backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
         }}
@@ -238,6 +256,15 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
         {sidebarOpen && <CurrentRumours isDarkMode={isDarkMode} />}
       </motion.div>
 
+      {/* Backdrop for mobile when sidebar open */}
+      {!isLargeScreen && sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-40"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header - Always show */}
@@ -248,12 +275,14 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
           setIsDarkMode={setIsDarkMode}
           showBackButton={currentView === "content"}
           onBack={handleBackToModules}
+          showMenuButton={!isLargeScreen}
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         />
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto">
           {currentView !== "chatbot" && (
-            <div className="p-6">{loading && <LoadingSpinner />}</div>
+            <div className="p-4 sm:p-6">{loading && <LoadingSpinner />}</div>
           )}
 
           <ViewContainer

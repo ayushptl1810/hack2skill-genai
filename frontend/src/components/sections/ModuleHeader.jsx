@@ -22,8 +22,8 @@ const ModuleHeader = ({
       darkBorderColor="#374151"
       lightBorderColor="#e5e7eb"
     >
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div className="min-w-0">
           <MotionText
             className="text-3xl font-bold mb-2"
             isDarkMode={isDarkMode}
@@ -46,7 +46,7 @@ const ModuleHeader = ({
             isCompleted ? undefined : () => onCompleteModule(selectedModule)
           }
           disabled={isCompleted}
-          className={`px-6 py-3 rounded-lg font-medium ${
+          className={`w-full sm:w-auto px-5 sm:px-6 py-3 rounded-lg font-medium ${
             isCompleted
               ? "bg-green-500 text-white cursor-not-allowed"
               : "cursor-pointer hover:shadow-lg"
@@ -64,13 +64,13 @@ const ModuleHeader = ({
           lightColor="#ffffff"
         >
           {isCompleted ? (
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-10 h-10" />
+            <div className="flex items-center justify-center space-x-2">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
               <span>Completed</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
-              <Trophy className="w-10 h-10" />
+            <div className="flex items-center justify-center space-x-2">
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
               <span>Mark Complete</span>
             </div>
           )}

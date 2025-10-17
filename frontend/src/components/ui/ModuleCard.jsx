@@ -99,7 +99,7 @@ const ModuleCard = ({
               {module.estimated_time}
             </MotionText>
           </motion.div>
-          <div className="flex space-x-1">
+          <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
             {module.difficulty_levels.map((level) => (
               <motion.span
                 key={level}
