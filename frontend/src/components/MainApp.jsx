@@ -9,6 +9,8 @@ import CurrentRumours from "./sections/CurrentRumours";
 import PageHeader from "./sections/PageHeader";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ViewContainer from "./ViewContainer";
+import RumourModal from "./ui/RumourModal";
+import { getApiBaseUrl } from "../config/api";
 
 const MainApp = ({ isDarkMode, setIsDarkMode }) => {
   // State management
@@ -28,6 +30,8 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLargeScreen, setIsLargeScreen] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [selectedRumour, setSelectedRumour] = useState(null);
+  const [isRumourModalOpen, setIsRumourModalOpen] = useState(false);
 
   // Handle responsive sidebar default state and load modules
   useEffect(() => {
@@ -48,7 +52,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
     try {
       setLoading(true);
       console.log("Loading educational modules...");
-      const response = await fetch("http://127.0.0.1:7860/educational/modules");
+      const response = await fetch(`${getApiBaseUrl()}/educational/modules`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -91,7 +95,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
       setLoading(true);
       console.log(`Loading content for ${moduleId} (${difficultyLevel})...`);
       const response = await fetch(
-        `http://127.0.0.1:7860/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
+        `${getApiBaseUrl()}/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -203,9 +207,19 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
     setCurrentView("modules");
   };
 
+  const handleRumourClick = (rumour) => {
+    setSelectedRumour(rumour);
+    setIsRumourModalOpen(true);
+  };
+
+  const handleCloseRumourModal = () => {
+    setIsRumourModalOpen(false);
+    setSelectedRumour(null);
+  };
+
   return (
     <motion.div
-      className={`h-screen flex`}
+      className={`h-screen flex overflow-hidden`}
       animate={{
         backgroundColor: isDarkMode ? "#111827" : "#f9fafb",
       }}
@@ -226,7 +240,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
               ? "bg-gray-800 border-gray-700"
               : "bg-white border-gray-200"
           }
-          border-r flex flex-col
+          border-r flex flex-col h-full overflow-hidden scrollbar-hide
         `}
         animate={{
           backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
@@ -253,7 +267,12 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
           />
         )}
 
-        {sidebarOpen && <CurrentRumours isDarkMode={isDarkMode} />}
+        {sidebarOpen && (
+          <CurrentRumours
+            isDarkMode={isDarkMode}
+            onRumourClick={handleRumourClick}
+          />
+        )}
       </motion.div>
 
       {/* Backdrop for mobile when sidebar open */}
@@ -266,7 +285,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Header - Always show */}
         <PageHeader
           title={getPageTitle()}
@@ -280,7 +299,13 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
         />
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className={`flex-1 min-h-0 ${
+            currentView === "chatbot" || currentView === "content"
+              ? "overflow-y-auto scrollbar-hide"
+              : ""
+          }`}
+        >
           {currentView !== "chatbot" && (
             <div className="p-4 sm:p-6">{loading && <LoadingSpinner />}</div>
           )}
@@ -302,6 +327,14 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
           />
         </div>
       </div>
+
+      {/* Rumour Modal - Outside all containers for full-screen display */}
+      <RumourModal
+        post={selectedRumour}
+        isOpen={isRumourModalOpen}
+        onClose={handleCloseRumourModal}
+        isDarkMode={isDarkMode}
+      />
     </motion.div>
   );
 };

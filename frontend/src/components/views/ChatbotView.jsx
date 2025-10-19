@@ -252,7 +252,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
 
   return (
     <motion.div
-      className={`h-full flex flex-col`}
+      className={`h-full flex flex-col overflow-hidden`}
       animate={{
         backgroundColor: isDarkMode ? "#111827" : "#f9fafb",
       }}
@@ -262,7 +262,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
       }}
     >
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-6 py-4 sm:py-6 space-y-4">
         {messages.map((message) => (
           <motion.div
             key={message.id}

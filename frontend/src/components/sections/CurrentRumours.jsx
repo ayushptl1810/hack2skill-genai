@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import RumourCard from "../ui/RumourCard";
-import RumourModal from "../ui/RumourModal";
 import MotionText from "../ui/MotionText";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { getApiBaseUrl, getWsUrl } from "../../config/api";
@@ -91,10 +90,8 @@ const transformMongoData = (mongoPosts) => {
   });
 };
 
-const CurrentRumours = ({ isDarkMode }) => {
+const CurrentRumours = ({ isDarkMode, onRumourClick }) => {
   const [rumours, setRumours] = useState([]);
-  const [selectedRumour, setSelectedRumour] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
@@ -234,13 +231,7 @@ const CurrentRumours = ({ isDarkMode }) => {
   }, []);
 
   const handleRumourClick = (rumour) => {
-    setSelectedRumour(rumour);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedRumour(null);
+    onRumourClick(rumour);
   };
 
   return (
@@ -249,7 +240,7 @@ const CurrentRumours = ({ isDarkMode }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeInOut" }}
-        className={`p-4 border-t ${
+        className={`p-4 border-t flex-1 overflow-y-auto scrollbar-hide ${
           isDarkMode ? "border-gray-700" : "border-gray-200"
         }`}
       >
@@ -270,7 +261,7 @@ const CurrentRumours = ({ isDarkMode }) => {
 
         {/* Scrollable Rumours List */}
         <motion.div
-          className="max-h-115 overflow-y-auto space-y-3 pr-1"
+          className="max-h-115 overflow-y-auto scrollbar-hide space-y-3 pr-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -373,14 +364,6 @@ const CurrentRumours = ({ isDarkMode }) => {
 
         {/* Footer controls removed: WebSocket now handles live updates */}
       </motion.div>
-
-      {/* Modal */}
-      <RumourModal
-        post={selectedRumour}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        isDarkMode={isDarkMode}
-      />
     </>
   );
 };

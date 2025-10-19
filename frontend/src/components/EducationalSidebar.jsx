@@ -13,6 +13,7 @@ import {
   Target,
   ExternalLink,
 } from "lucide-react";
+import { getApiBaseUrl } from "../config/api";
 
 const EducationalSidebar = ({
   isDarkMode,
@@ -46,7 +47,7 @@ const EducationalSidebar = ({
   const loadModules = async () => {
     try {
       console.log("Loading educational modules...");
-      const response = await fetch("http://127.0.0.1:7860/educational/modules");
+      const response = await fetch(`${getApiBaseUrl()}/educational/modules`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -86,7 +87,7 @@ const EducationalSidebar = ({
     try {
       console.log(`Loading content for ${moduleId} (${difficultyLevel})...`);
       const response = await fetch(
-        `http://127.0.0.1:7860/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
+        `${getApiBaseUrl()}/educational/modules/${moduleId}?difficulty_level=${difficultyLevel}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -115,7 +116,7 @@ const EducationalSidebar = ({
     try {
       console.log("Loading contextual learning...");
       const response = await fetch(
-        "http://127.0.0.1:7860/educational/contextual-learning",
+        `${getApiBaseUrl()}/educational/contextual-learning`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

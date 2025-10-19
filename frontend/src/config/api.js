@@ -3,7 +3,7 @@ export const getApiBaseUrl = () => {
   if (env && typeof env === "string" && env.trim()) {
     return env.replace(/\/$/, "");
   }
-  return "http://127.0.0.1:7860"; // default local backend
+  return import.meta.env?.VITE_API_BASE_URL || "http://127.0.0.1:7860"; // default local backend
 };
 
 export const getWsUrl = () => {
