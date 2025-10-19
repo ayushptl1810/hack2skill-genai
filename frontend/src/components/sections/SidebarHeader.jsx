@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Brain, X, Menu } from "lucide-react";
+import { X, Menu } from "lucide-react";
 import MotionText from "../ui/MotionText.jsx";
 import { Link } from "react-router-dom";
+import logo from "../../assets/logo.png";
 
 const SidebarHeader = ({
   title,
@@ -24,8 +25,12 @@ const SidebarHeader = ({
             transition={{ duration: 0.6, ease: "easeInOut" }}
             className="flex items-center space-x-3"
           >
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-              <Brain className="w-6 h-6 text-white" />
+            <div className="w-16 h-16 flex items-center justify-center">
+              <img
+                src={logo}
+                alt="Project Aegis"
+                className="w-16 h-16 object-contain"
+              />
             </div>
             <div>
               <MotionText
@@ -49,7 +54,7 @@ const SidebarHeader = ({
         )}
         <motion.button
           onClick={onToggle}
-          className={`p-2 rounded-lg ${
+          className={`ml-4 rounded-lg ${
             isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
           }`}
           animate={{
@@ -64,14 +69,14 @@ const SidebarHeader = ({
               animate={{ color: isDarkMode ? "#9ca3af" : "#374151" }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </motion.div>
           ) : (
             <motion.div
               animate={{ color: isDarkMode ? "#9ca3af" : "#6b7280" }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </motion.div>
           )}
         </motion.button>

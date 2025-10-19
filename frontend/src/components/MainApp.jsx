@@ -159,7 +159,7 @@ const MainApp = ({ isDarkMode, setIsDarkMode }) => {
   const getPageTitle = () => {
     switch (currentView) {
       case "chatbot":
-        return "FactCheck AI";
+        return "Project Aegis";
       case "modules":
         return "Educational Modules";
       case "content":
