@@ -392,7 +392,9 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                     </div>
                   )}
 
-                  <p className="text-sm mt-3">{message.content}</p>
+                  <div className="text-sm mt-3 whitespace-pre-wrap">
+                    {message.content}
+                  </div>
 
                   {message.sources && message.sources.length > 0 && (
                     <div
@@ -614,7 +616,7 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
                 ease: "easeInOut",
               }}
             >
-              <Upload className="w-5 h-5" />
+              <Upload className="w-6 h-6" />
             </motion.label>
             <motion.button
               onClick={isRecording ? stopRecording : startRecording}
@@ -633,19 +635,19 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
               }}
             >
               <Mic
-                className={`w-5 h-5 ${isRecording ? "animate-pulse" : ""}`}
+                className={`w-6 h-6 ${isRecording ? "animate-pulse" : ""}`}
               />
             </motion.button>
           </div>
-          <motion.input
-            type="text"
+          <motion.textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask me to verify something..."
-            className={`flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
               isDarkMode ? "placeholder-gray-400" : "placeholder-gray-500"
             }`}
+            style={{ height: "45px", minHeight: "45px" }}
             animate={{
               backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
               borderColor: isDarkMode ? "#374151" : "#d1d5db",
@@ -662,7 +664,8 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
             disabled={
               (!inputValue.trim() && uploadedFiles.length === 0) || isLoading
             }
-            className="px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="px-4 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            style={{ height: "45px" }}
             animate={{
               backgroundColor: "#3b82f6",
             }}

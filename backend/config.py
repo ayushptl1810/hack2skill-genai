@@ -40,7 +40,7 @@ class Config:
     USE_STREAM_DOWNLOADER: bool = os.getenv("USE_STREAM_DOWNLOADER", "true").lower() == "true"
     # Binary path for yt-dlp (auto-resolved in code if not absolute)
     YTDLP_BIN: str = os.getenv("YTDLP_BIN", "yt-dlp")
-    STREAM_DOWNLOAD_TIMEOUT: int = int(os.getenv("STREAM_DOWNLOAD_TIMEOUT", "120"))
+    STREAM_DOWNLOAD_TIMEOUT: int = int(os.getenv("STREAM_DOWNLOAD_TIMEOUT", "30"))
     # Optional comma-separated list of domains to always treat as streaming
     STREAMING_DOMAINS: str = os.getenv("STREAMING_DOMAINS", "youtube.com,youtu.be,instagram.com,twitter.com,x.com,tiktok.com,facebook.com,fb.watch")
     

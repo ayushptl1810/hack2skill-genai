@@ -150,10 +150,37 @@ Rules:
         
         # Simple content type detection
         verification_type = "text"  # default for text-only queries
-        if any(ext in input_text.lower() for ext in ['.mp4', '.avi', '.mov', 'video']):
+        
+        # Check for video platform URLs first
+        video_platforms = [
+            'instagram.com/reels/', 'instagram.com/p/', 'instagram.com/tv/',
+            'youtube.com/watch', 'youtu.be/', 'youtube.com/shorts/',
+            'tiktok.com/', 'vm.tiktok.com/',
+            'twitter.com/', 'x.com/', 't.co/',
+            'facebook.com/', 'fb.watch/',
+            'vimeo.com/', 'twitch.tv/', 'dailymotion.com/',
+            'imgur.com/', 'soundcloud.com/', 'mixcloud.com/',
+            'lbry.tv/', 'odysee.com/', 't.me/'
+        ]
+        
+        # Check for image platform URLs
+        image_platforms = [
+            'instagram.com/p/', 'imgur.com/', 'flickr.com/',
+            'pinterest.com/', 'unsplash.com/', 'pexels.com/'
+        ]
+        
+        # Check for direct file extensions
+        if any(ext in input_text.lower() for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm', 'video']):
             verification_type = "video"
-        elif any(ext in input_text.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', 'image', 'photo', 'picture']):
+        elif any(ext in input_text.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', 'image', 'photo', 'picture']):
             verification_type = "image"
+        # Check for video platform URLs
+        elif any(platform in input_text.lower() for platform in video_platforms):
+            verification_type = "video"
+        # Check for image platform URLs
+        elif any(platform in input_text.lower() for platform in image_platforms):
+            verification_type = "image"
+            
         print(f"🔍 DEBUG: Detected verification_type: {verification_type}")
         
         # Extract date patterns
