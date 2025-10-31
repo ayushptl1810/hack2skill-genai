@@ -12,6 +12,7 @@ import logging
 import json
 import base64
 import requests
+import re
 
 from services.image_verifier import ImageVerifier
 from services.video_verifier import VideoVerifier
@@ -22,6 +23,7 @@ from services.mongodb_service import MongoDBService
 from services.websocket_service import connection_manager, initialize_mongodb_change_stream, cleanup_mongodb_change_stream
 from utils.file_utils import save_upload_file, cleanup_temp_files
 from config import config
+from services.deepfake_checker import detect_audio_deepfake
 
 app = FastAPI(
     title="Visual Verification Service",
@@ -292,6 +294,7 @@ async def chatbot_verify(
         # Process files if any
         files_list = content.get("files", [])
         print(f"🔍 DEBUG: Processing {len(files_list)} files")
+        input_processor_for_audio = input_processor
         for i, file_path in enumerate(files_list):
             print(f"🔍 DEBUG: Processing file {i}: {file_path}")
             temp_files_to_cleanup.append(file_path)
@@ -303,6 +306,56 @@ async def chatbot_verify(
                     claim_context=claim_context,
                     claim_date=claim_date
                 )
+            elif verification_type == "audio":
+                print(f"🔍 DEBUG: Calling detect_audio_deepfake for file (AUDIO)")
+                deepfake = detect_audio_deepfake(file_path)
+                # Use Gemini to frame a verdict
+                try:
+                    gemini_prompt = f"""
+You are an assistant for audio authenticity analysis.
+File name: {os.path.basename(file_path)}
+{('User question: ' + claim_context) if claim_context else ''}
+The audio has been analyzed and the result is: {'deepfake' if deepfake else 'NOT deepfake'}.
+Compose a clear, friendly, 1-2 line summary verdict for the user, tailored to the above context/result (do not answer with JSON or code, just a natural response).
+Avoid repeating 'deepfake detection' technical language; be concise and direct.
+"""
+                    gemini_response = input_processor_for_audio.model.generate_content(gemini_prompt)
+                    ai_message = None
+                    if gemini_response and hasattr(gemini_response, 'text') and gemini_response.text:
+                        response_text = gemini_response.text.strip()
+                        # Case 1: JSON block
+                        if response_text.startswith('{') or response_text.startswith('```json'):
+                            rt = response_text.strip('` ')
+                            # Remove leading/trailing markdown code block marks
+                            rt = re.sub(r'^```json', '', rt, flags=re.I).strip()
+                            rt = re.sub(r'^```', '', rt, flags=re.I).strip()
+                            rt = re.sub(r'```$', '', rt, flags=re.I).strip()
+                            try:
+                                import json
+                                json_obj = json.loads(rt)
+                                ai_message = json_obj.get('message') or ''
+                                if not ai_message and 'verdict' in json_obj:
+                                    # fallback: concat verdict + any explanation
+                                    ai_message = f"Verdict: {json_obj['verdict']}" + (f". {json_obj.get('reasoning','')}" if json_obj.get('reasoning') else '')
+                            except Exception as excjson:
+                                print(f"[audio Gemini JSON extract fail] {type(excjson).__name__}: {excjson}")
+                                # Fallback to the text itself
+                                ai_message = response_text
+                        else:
+                            ai_message = response_text
+                except Exception as exc:
+                    print(f"[gemini audio summary error] {type(exc).__name__}: {exc}")
+                    ai_message = None
+                if not ai_message:
+                    ai_message = (
+                        "This audio is likely AI-generated." if deepfake else "This audio appears authentic and human." )
+                result = {
+                    "verified": not deepfake,
+                    "is_deepfake": deepfake,
+                    "file": file_path,
+                    "message": ai_message,
+                    "source": "uploaded_file"
+                }
             else:  # video
                 print(f"🔍 DEBUG: Calling video_verifier.verify for file")
                 result = await video_verifier.verify(
@@ -347,48 +400,59 @@ async def chatbot_verify(
         for i, result in enumerate(results):
             print(f"🔍 DEBUG: Result {i}: {result}")
         
-        # Build a single concise chatbot message
+        # Aggregate verdict before using anywhere
         overall = _aggregate_verdicts(results)
-        print(f"🔍 DEBUG: Overall verdict: {overall}")
-        
-        # Prefer consolidated video summary when present, else per-item message
-        candidates: List[str] = []
+
+        # Collect message/summary fields
+        candidates = []
         for r in results:
-            if isinstance(r, dict):
-                details = r.get("details") or {}
-                if isinstance(details, dict) and details.get("overall_summary"):
-                    candidates.append(str(details.get("overall_summary")))
-                elif r.get("message"):
-                    candidates.append(str(r.get("message")))
-        best_msg = max(candidates, key=len) if candidates else ""
-        print(f"🔍 DEBUG: Best message candidates: {candidates}")
-        print(f"🔍 DEBUG: Best message: {best_msg}")
-        
-        # Avoid duplication by detecting if clarification already begins with a verdict phrase
-        verdict_prefixes = [
-            "this claim is true:",
-            "this claim is false:",
-            "this claim is uncertain:",
-            "this claim has mixed evidence:",
-            "the claim is true:",
-            "the claim is false:",
-            "the claim is uncertain:",
-            "result:",
-        ]
-        prefix_map = {
-            "true": "This claim is true:",
-            "false": "This claim is false:",
-            "uncertain": "This claim is uncertain:",
-            "mixed": "This claim has mixed evidence:",
-            "no_content": "No verifiable content found:",
-        }
-        prefix = prefix_map.get(overall, "Result:")
-        lower_msg = (best_msg or "").strip().lower()
-        if best_msg and any(lower_msg.startswith(p) for p in verdict_prefixes):
-            final_message = best_msg.strip()
+            msg = (r.get("message") or r.get("summary") or "").strip()
+            if msg:
+                candidates.append(msg)
+        best_msg = max(candidates, key=len, default="")
+
+        # --- REFINE OUTPUT ---
+        # For audio, force clear user-facing message
+        verdict_is_audio = verification_type == "audio"
+        if verdict_is_audio and results:
+            # For batch, show the message(s) generated by Gemini/LLM for each result, joined with spacing.
+            audio_msgs = [x["message"] for x in results if "message" in x and x["message"]]
+            final_message = "\n\n".join(audio_msgs)
         else:
-            final_message = f"{prefix} {best_msg}" if best_msg else prefix
-        
+            # Final message extraction for ALL types: if best_msg is a raw JSON or code block, try extracting the `message` field.
+            if not verdict_is_audio:
+                raw_final = (best_msg or "").strip()
+                nonjson = bool(raw_final) and not (raw_final.startswith('{') or raw_final.startswith('```'))
+                extracted_message = raw_final
+                if not nonjson:
+                    rt = raw_final.strip('` \n')
+                    rt = re.sub(r'^```json', '', rt, flags=re.I).strip()
+                    rt = re.sub(r'^```', '', rt, flags=re.I).strip()
+                    rt = re.sub(r'```$', '', rt, flags=re.I).strip()
+                    try:
+                        import json
+                        json_obj = json.loads(rt)
+                        extracted_message = json_obj.get('message') or ''
+                        if not extracted_message and 'verdict' in json_obj:
+                            extracted_message = f"Verdict: {json_obj['verdict']}" + (f". {json_obj.get('reasoning','')}" if json_obj.get('reasoning') else '')
+                    except Exception as excjson:
+                        print(f"[text gemini JSON extract fail] {type(excjson).__name__}: {excjson}")
+                        extracted_message = raw_final
+                final_message = extracted_message
+                # Remove typical claim verdict phrases from start if present
+                verdict_prefixes = [
+                    "this claim is true:", "this claim is false:", "this claim is uncertain:", "this claim has mixed evidence:", "the claim is true:", "the claim is false:", "the claim is uncertain:", "result:",
+                ]
+                for prefix in verdict_prefixes:
+                    if final_message.strip().lower().startswith(prefix):
+                        final_message = final_message.strip()[len(prefix):].strip()
+                        break
+                # For stray audio check message from earlier code
+                if final_message.strip().startswith("Audio deepfake detection completed"):
+                    # Should not leak this to user; use generic fallback
+                    final_message = "Audio deepfake detection was performed."
+            else:
+                final_message = (best_msg or "")
         print(f"🔍 DEBUG: Final message: {final_message}")
         print(f"🔍 DEBUG: Final verdict: {overall}")
         

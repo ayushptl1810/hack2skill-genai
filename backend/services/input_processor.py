@@ -26,17 +26,17 @@ class InputProcessor:
         self.system_prompt = """You are an intelligent input processor for a visual verification service. 
         
 Your task is to analyze user input and extract:
-1. Image/video content (files, URLs, or descriptions)
+1. Image/video/audio content (files, URLs, or descriptions)
 2. Claim context (what the user is claiming)
 3. Claim date (when the claim was made)
-4. Type of verification needed (image, video, or text)
+4. Type of verification needed (image, video, audio, or text)
 
 Return a JSON response with this structure:
 {
-    "verification_type": "image" or "video" or "text",
+    "verification_type": "image" or "video" or "audio" or "text",
     "content": {
         "files": ["list of file paths if files provided"],
-        "urls": ["list of image/video URLs"],
+        "urls": ["list of image/video/audio URLs"],
         "descriptions": ["list of text descriptions"],
         "text": "the text claim to verify (if verification_type is text)"
     },
@@ -45,7 +45,7 @@ Return a JSON response with this structure:
 }
 
 Rules:
-- If multiple images/videos are mentioned, separate them clearly
+- If multiple images/videos/audio files are mentioned, separate them clearly
 - Extract URLs from text using regex patterns
 - Infer context from surrounding text if not explicitly stated
 - If no date is mentioned leave it blank
@@ -83,8 +83,18 @@ Rules:
             # Post-process and enhance the response
             print(f"🔍 DEBUG: Post-processing response")
             final_response = await self._post_process_response(parsed_response, files)
+
+            # PATCH: If verification_type is 'video' but all files have audio extensions, reassign to 'audio'
+            audio_exts = ['.mp3', '.wav', '.ogg', '.flac', '.m4a']
+            content_files = final_response.get('content', {}).get('files', [])
+            if (
+                final_response.get('verification_type') == 'video' and
+                content_files and
+                all(any(f.lower().endswith(e) for e in audio_exts) for f in content_files)
+            ):
+                print(f"🔍 PATCH: Rewriting 'verification_type' from 'video' to 'audio' (all files are audio)")
+                final_response['verification_type'] = 'audio'
             print(f"🔍 DEBUG: Final response = {final_response}")
-            
             return final_response
             
         except Exception as e:
@@ -174,6 +184,8 @@ Rules:
             verification_type = "video"
         elif any(ext in input_text.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', 'image', 'photo', 'picture']):
             verification_type = "image"
+        elif any(ext in input_text.lower() for ext in ['.mp3', '.wav', '.ogg', '.flac', '.m4a', 'audio']):
+            verification_type = "audio"
         # Check for video platform URLs
         elif any(platform in input_text.lower() for platform in video_platforms):
             verification_type = "video"

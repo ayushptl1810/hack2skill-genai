@@ -27,7 +27,9 @@ class TextFactChecker:
     
     async def verify(self, text_input: str, claim_context: str = "Unknown context", claim_date: str = "Unknown date") -> Dict[str, Any]:
         """
-        Verify a textual claim using Google Custom Search API with fact-checking sites
+        Verify a textual claim using a hybrid two-step approach:
+        Step 1: Search curated fact-checking sources
+        Step 2: If uncertain/no_content, fallback to Gemini's general knowledge
         
         Args:
             text_input: The text claim to verify
@@ -43,25 +45,53 @@ class TextFactChecker:
             print(f"🔍 DEBUG: claim_context = {claim_context}")
             print(f"🔍 DEBUG: claim_date = {claim_date}")
             print(f"Starting verification for: {text_input}")
-            # Search for fact-checked claims related to the input text
+            
+            # STEP 1: Search for fact-checked claims in curated sources
             search_results = await self._search_claims(text_input)
             print(f"🔍 DEBUG: search_results = {search_results}")
             
-            if not search_results:
-                return {
+            analysis = None
+            if search_results:
+                # Analyze the search results with Gemini
+                analysis = self._analyze_results(search_results, text_input)
+            
+            # STEP 2: Check if we need to fallback to general knowledge
+            # Trigger fallback if: no results, or uncertain/no_content verdict
+            should_fallback = (
+                not search_results or
+                (analysis and analysis.get("verdict") in ["uncertain", "no_content"])
+            )
+            
+            if should_fallback:
+                print("🔄 STEP 2: Curated sources insufficient, falling back to Gemini general knowledge...")
+                fallback_analysis = await self._verify_with_general_knowledge(text_input, claim_context, claim_date)
+                
+                # If fallback succeeded, use it; otherwise keep original analysis
+                if fallback_analysis and fallback_analysis.get("verdict") not in ["uncertain", "no_content", "error"]:
+                    print("✅ Fallback to general knowledge succeeded")
+                    return {
+                        "verified": fallback_analysis["verified"],
+                        "verdict": fallback_analysis["verdict"],
+                        "message": fallback_analysis["message"],
+                        "details": {
+                            "claim_text": text_input,
+                            "claim_context": claim_context,
+                            "claim_date": claim_date,
+                            "fact_checks": search_results if search_results else [],
+                            "analysis": fallback_analysis,
+                            "verification_method": "general_knowledge_fallback"
+                        }
+                    }
+                else:
+                    print("⚠️ Fallback also uncertain, returning original analysis")
+            
+            # Return original curated source analysis
+            if not analysis:
+                analysis = {
                     "verified": False,
                     "verdict": "no_content",
-                    "message": "No fact-checked information found for this claim",
-                    "details": {
-                        "claim_text": text_input,
-                        "claim_context": claim_context,
-                        "claim_date": claim_date,
-                        "fact_checks": []
-                    }
+                    "message": "No fact-checked information found for this claim"
                 }
-            
-            # Analyze the search results
-            analysis = self._analyze_results(search_results, text_input)
             
             return {
                 "verified": analysis["verified"],
@@ -71,12 +101,14 @@ class TextFactChecker:
                     "claim_text": text_input,
                     "claim_context": claim_context,
                     "claim_date": claim_date,
-                    "fact_checks": search_results,
-                    "analysis": analysis
+                    "fact_checks": search_results if search_results else [],
+                    "analysis": analysis,
+                    "verification_method": "curated_sources"
                 }
             }
             
         except Exception as e:
+            print(f"❌ Error in verify: {e}")
             return {
                 "verified": False,
                 "verdict": "error",
@@ -438,6 +470,11 @@ STEP-BY-STEP ANALYSIS:
 
 Think through this systematically and provide your analysis.
 
+IMPORTANT INSTRUCTIONS FOR YOUR RESPONSE:
+- When referring to sources in your message, DO NOT use specific numbers like "Source 1", "Source 3", or "Sources 2, 4, and 5"
+- Instead, use generic references like "the sources", "multiple sources", "one source", "several sources"
+- Example: Instead of "Sources 3, 4, and 5 confirm..." say "Multiple sources confirm..." or "The sources confirm..."
+
 Respond in this exact JSON format:
 {{
     "verdict": "true|false|mixed|uncertain",
@@ -499,6 +536,102 @@ Respond in this exact JSON format:
             "relevant_results_count": len(results),
             "analysis_method": "fallback"
         }
+    
+    async def _verify_with_general_knowledge(self, text_input: str, claim_context: str, claim_date: str) -> Dict[str, Any]:
+        """
+        Verify a claim using Gemini's general knowledge base directly (no curated sources)
+        This is used as a fallback when curated sources don't have enough information
+        
+        Args:
+            text_input: The text claim to verify
+            claim_context: Context about the claim
+            claim_date: Date when the claim was made
+            
+        Returns:
+            Analysis results with verdict and message
+        """
+        from datetime import datetime
+        current_date = datetime.now().strftime("%B %d, %Y")
+        
+        prompt = f"""
+You are a fact-checking expert AI with access to current information as of {current_date}.
+
+CLAIM TO VERIFY: "{text_input}"
+CONTEXT: {claim_context if claim_context != "Unknown context" else "No additional context provided"}
+CLAIM DATE: {claim_date if claim_date != "Unknown date" else "Unknown"}
+
+Your task is to verify this claim using your knowledge base. Since this is a direct factual question that may not be covered by news articles:
+
+1. **Use your most recent training data** to answer the question directly
+2. If this is about current events, political positions, or time-sensitive facts, be especially careful to provide the MOST CURRENT information
+3. If you're uncertain about recent changes, acknowledge that
+4. Always answer based on the most recent information you have
+
+Provide a clear, direct answer. Think step-by-step:
+- What does the claim assert?
+- Based on your knowledge (as of your training cutoff and any recent data you have), is this true or false?
+- If it's a time-sensitive claim, what is the current status?
+
+Respond in this exact JSON format:
+{{
+    "verdict": "true|false|mixed|uncertain",
+    "verified": true|false,
+    "message": "Your clear, direct answer explaining whether the claim is true or false and why",
+    "confidence": "high|medium|low",
+    "reasoning": "Your step-by-step reasoning process",
+    "knowledge_cutoff_note": "Optional note if the answer might be outdated or if recent changes are possible"
+}}
+
+IMPORTANT: For current events or political positions, provide the MOST RECENT information you have access to.
+"""
+        
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Try to parse JSON response
+            if response_text.startswith('```json'):
+                response_text = response_text.replace('```json', '').replace('```', '').strip()
+            elif response_text.startswith('```'):
+                response_text = response_text.replace('```', '').strip()
+            
+            analysis = json.loads(response_text)
+            
+            # Ensure required fields
+            analysis.setdefault("verdict", "uncertain")
+            analysis.setdefault("verified", False)
+            analysis.setdefault("message", "Analysis completed using general knowledge")
+            analysis.setdefault("confidence", "medium")
+            analysis.setdefault("reasoning", "Direct verification using AI knowledge base")
+            
+            # Add metadata
+            analysis["analysis_method"] = "general_knowledge"
+            analysis["verification_date"] = current_date
+            
+            print(f"✅ General knowledge verification result: {analysis['verdict']}")
+            return analysis
+            
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse Gemini general knowledge response as JSON: {e}")
+            print(f"Raw response: {response_text[:500]}")
+            # Try to extract plain text answer
+            return {
+                "verified": False,
+                "verdict": "uncertain",
+                "message": response_text if response_text else "Unable to verify using general knowledge",
+                "confidence": "low",
+                "analysis_method": "general_knowledge",
+                "error": "JSON parsing failed, used plain text response"
+            }
+        except Exception as e:
+            print(f"General knowledge verification error: {e}")
+            return {
+                "verified": False,
+                "verdict": "error",
+                "message": f"Error during general knowledge verification: {str(e)}",
+                "confidence": "low",
+                "analysis_method": "general_knowledge"
+            }
     
     def _extract_verdict_from_content(self, content: str) -> str:
         """
