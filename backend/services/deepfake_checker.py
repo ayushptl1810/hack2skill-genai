@@ -54,8 +54,8 @@ def detect_audio_deepfake(file_path: str) -> bool:
         top_label = best_result['label'].lower()
         top_score = best_result['score']
         print(f"...Audio pipeline result: '{top_label}' with score {top_score:.4f}")
-        # The mo-thecreator model uses 'spoof' (fake) and 'bonafide' (real)
-        return top_label == 'spoof'
+        is_fake = top_label in ['spoof', 'fake']
+        return is_fake
     except Exception as e:
         print(f"Error during audio processing/inference: {e}")
         return False

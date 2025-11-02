@@ -313,11 +313,11 @@ async def chatbot_verify(
                 try:
                     gemini_prompt = f"""
 You are an assistant for audio authenticity analysis.
-File name: {os.path.basename(file_path)}
 {('User question: ' + claim_context) if claim_context else ''}
 The audio has been analyzed and the result is: {'deepfake' if deepfake else 'NOT deepfake'}.
 Compose a clear, friendly, 1-2 line summary verdict for the user, tailored to the above context/result (do not answer with JSON or code, just a natural response).
 Avoid repeating 'deepfake detection' technical language; be concise and direct.
+Do NOT mention file names or file paths in your response.
 """
                     gemini_response = input_processor_for_audio.model.generate_content(gemini_prompt)
                     ai_message = None
