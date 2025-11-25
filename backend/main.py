@@ -708,5 +708,68 @@ async def get_cache_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Auth endpoints (minimal implementation)
+from pydantic import BaseModel
+from typing import Optional
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    email: str
+    id: Optional[str] = None
+
+# Simple in-memory user store (replace with database in production)
+users_db = {}
+
+@app.post("/auth/signup")
+async def signup(request: SignupRequest):
+    """Sign up a new user"""
+    if request.email in users_db:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # In production, hash the password
+    users_db[request.email] = {
+        "email": request.email,
+        "password": request.password,  # Should be hashed
+        "id": str(len(users_db) + 1)
+    }
+    
+    return {
+        "message": "User created successfully",
+        "token": "mock_token_" + request.email,  # In production, use JWT
+        "user": {"email": request.email, "id": users_db[request.email]["id"]}
+    }
+
+@app.post("/auth/login")
+async def login(request: LoginRequest):
+    """Login user"""
+    if request.email not in users_db:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    user = users_db[request.email]
+    if user["password"] != request.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    return {
+        "message": "Login successful",
+        "token": "mock_token_" + request.email,  # In production, use JWT
+        "user": {"email": request.email, "id": user["id"]}
+    }
+
+@app.get("/auth/me")
+async def get_current_user():
+    """Get current user (requires authentication in production)"""
+    # In production, verify JWT token from Authorization header
+    return {
+        "email": "demo@example.com",
+        "id": "1"
+    }
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=config.SERVICE_PORT)
