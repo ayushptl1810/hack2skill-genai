@@ -13,6 +13,7 @@ import {
   Users,
   Sparkles,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import Hero3D from "../../components/Hero3D";
 
@@ -279,23 +280,18 @@ const Home = () => {
                 >
                   <button
                     onClick={() => setExpandedType(isExpanded ? null : index)}
-                    className="w-full flex items-center justify-between py-6 text-left"
+                    className="w-full flex items-center justify-between py-6 text-left hover:opacity-80 transition-opacity"
                   >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="bg-blue-600/20 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <type.icon className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <h3 className="text-2xl font-semibold text-white">
-                        {type.title}
-                      </h3>
+                    <h3 className="text-xl font-bold text-white flex-1">
+                      {type.title}
+                    </h3>
+                    <div className="ml-4 flex-shrink-0">
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-white" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-white" />
+                      )}
                     </div>
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="ml-4 flex-shrink-0"
-                    >
-                      <ChevronDown className="w-5 h-5 text-blue-400" />
-                    </motion.div>
                   </button>
 
                   <AnimatePresence>
@@ -307,8 +303,8 @@ const Home = () => {
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="pb-6 pl-16">
-                          <p className="text-gray-300 text-base leading-relaxed">
+                        <div className="pb-6">
+                          <p className="text-gray-400 text-base leading-relaxed">
                             {type.expandedContent}
                           </p>
                         </div>

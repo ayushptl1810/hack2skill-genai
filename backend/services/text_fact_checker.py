@@ -27,9 +27,10 @@ class TextFactChecker:
     
     async def verify(self, text_input: str, claim_context: str = "Unknown context", claim_date: str = "Unknown date") -> Dict[str, Any]:
         """
-        Verify a textual claim using a hybrid two-step approach:
-        Step 1: Search curated fact-checking sources
-        Step 2: If uncertain/no_content, fallback to Gemini's general knowledge
+        Verify a textual claim using a three-phase approach:
+        1. Immediate Gemini read-through for a quick, reference-free baseline
+        2. Curated SERP (fact-check) harvesting with structured analysis
+        3. A final Gemini synthesis that reasons over BOTH the baseline and SERP data
         
         Args:
             text_input: The text claim to verify
@@ -46,65 +47,71 @@ class TextFactChecker:
             print(f"🔍 DEBUG: claim_date = {claim_date}")
             print(f"Starting verification for: {text_input}")
             
+            # STEP 0: quick general-knowledge pass (baseline)
+            preliminary_analysis = await self._verify_with_general_knowledge(
+                text_input, claim_context, claim_date
+            )
+            print(f"🔍 DEBUG: preliminary_analysis = {preliminary_analysis}")
+            
             # STEP 1: Search for fact-checked claims in curated sources
             search_results = await self._search_claims(text_input)
             print(f"🔍 DEBUG: search_results = {search_results}")
             
-            analysis = None
+            curated_analysis = None
             if search_results:
                 # Analyze the search results with Gemini
-                analysis = self._analyze_results(search_results, text_input)
+                curated_analysis = self._analyze_results(search_results, text_input)
             
-            # STEP 2: Check if we need to fallback to general knowledge
-            # Trigger fallback if: no results, or uncertain/no_content verdict
-            should_fallback = (
-                not search_results or
-                (analysis and analysis.get("verdict") in ["uncertain", "no_content"])
+            final_response = self._synthesize_final_response(
+                text_input=text_input,
+                claim_context=claim_context,
+                claim_date=claim_date,
+                preliminary_analysis=preliminary_analysis,
+                curated_analysis=curated_analysis,
+                search_results=search_results or []
             )
             
-            if should_fallback:
-                print("🔄 STEP 2: Curated sources insufficient, falling back to Gemini general knowledge...")
-                fallback_analysis = await self._verify_with_general_knowledge(text_input, claim_context, claim_date)
-                
-                # If fallback succeeded, use it; otherwise keep original analysis
-                if fallback_analysis and fallback_analysis.get("verdict") not in ["uncertain", "no_content", "error"]:
-                    print("✅ Fallback to general knowledge succeeded")
-                    return {
-                        "verified": fallback_analysis["verified"],
-                        "verdict": fallback_analysis["verdict"],
-                        "message": fallback_analysis["message"],
-                        "details": {
-                            "claim_text": text_input,
-                            "claim_context": claim_context,
-                            "claim_date": claim_date,
-                            "fact_checks": search_results if search_results else [],
-                            "analysis": fallback_analysis,
-                            "verification_method": "general_knowledge_fallback"
-                        }
-                    }
-                else:
-                    print("⚠️ Fallback also uncertain, returning original analysis")
+            if final_response:
+                return final_response
             
-            # Return original curated source analysis
-            if not analysis:
-                analysis = {
-                    "verified": False,
-                    "verdict": "no_content",
-                    "message": "No fact-checked information found for this claim"
-                }
+            # Fallback ladder: curated -> preliminary -> default error
+            if curated_analysis:
+                return self._build_simple_response(
+                    curated_analysis,
+                    text_input,
+                    claim_context,
+                    claim_date,
+                    search_results or [],
+                    method_label="curated_sources_only",
+                    extra_details={
+                        "preliminary_analysis": preliminary_analysis,
+                        "curated_analysis": curated_analysis,
+                    },
+                )
+            
+            if preliminary_analysis:
+                return self._build_simple_response(
+                    preliminary_analysis,
+                    text_input,
+                    claim_context,
+                    claim_date,
+                    search_results or [],
+                    method_label="general_knowledge_only",
+                    extra_details={"preliminary_analysis": preliminary_analysis},
+                )
             
             return {
-                "verified": analysis["verified"],
-                "verdict": analysis["verdict"],
-                "message": analysis["message"],
+                "verified": False,
+                "verdict": "error",
+                "message": "Unable to generate a verification response.",
                 "details": {
                     "claim_text": text_input,
                     "claim_context": claim_context,
                     "claim_date": claim_date,
-                    "fact_checks": search_results if search_results else [],
-                    "analysis": analysis,
-                    "verification_method": "curated_sources"
-                }
+                    "fact_checks": search_results or [],
+                    "analysis": {},
+                    "verification_method": "unavailable",
+                },
             }
             
         except Exception as e:
@@ -518,6 +525,22 @@ Respond in this exact JSON format:
             print(f"Gemini analysis error: {e}")
             return self._fallback_analysis(results)
     
+    def _format_source_summary(self, results: List[Dict[str, Any]]) -> str:
+        """Create a short, human readable summary of the surfaced sources."""
+        if not results:
+            return "No vetted sources surfaced yet."
+
+        highlights = []
+        for result in results[:3]:
+            title = result.get("title") or "Unknown source"
+            outlet = result.get("displayLink")
+            summary = title
+            if outlet:
+                summary += f" ({outlet})"
+            highlights.append(summary)
+
+        return "Sources surfaced: " + "; ".join(highlights)
+
     def _fallback_analysis(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Fallback analysis when Gemini fails
@@ -528,10 +551,12 @@ Respond in this exact JSON format:
         Returns:
             Basic analysis results
         """
+        summary = self._format_source_summary(results)
+
         return {
             "verified": False,
             "verdict": "uncertain",
-            "message": "Unable to determine claim accuracy from available sources. Found fact-checking articles but analysis failed.",
+            "message": f"Could not verify this claim yet. {summary}",
             "confidence": "low",
             "relevant_results_count": len(results),
             "analysis_method": "fallback"
@@ -752,3 +777,121 @@ IMPORTANT: For current events or political positions, provide the MOST RECENT in
                 message += f" Sources include: {', '.join(top_sources[:3])}."
         
         return message
+
+    def _synthesize_final_response(
+        self,
+        text_input: str,
+        claim_context: str,
+        claim_date: str,
+        preliminary_analysis: Optional[Dict[str, Any]],
+        curated_analysis: Optional[Dict[str, Any]],
+        search_results: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Ask Gemini to reconcile preliminary + curated evidence into a single user-facing verdict.
+        """
+        try:
+            source_briefs = []
+            for item in search_results[:5]:
+                source_briefs.append(
+                    {
+                        "title": item.get("title"),
+                        "snippet": item.get("snippet"),
+                        "outlet": item.get("displayLink"),
+                        "link": item.get("link"),
+                    }
+                )
+
+            prompt = f"""
+You are an AI fact-checking editor. Combine the baseline assessment and curated sources to produce the final answer.
+
+CLAIM: "{text_input}"
+CONTEXT: {claim_context}
+CLAIM DATE: {claim_date}
+
+BASELINE ANALYSIS (Gemini quick look):
+{json.dumps(preliminary_analysis or {}, indent=2, ensure_ascii=False)}
+
+CURATED FACT-CHECK ANALYSIS:
+{json.dumps(curated_analysis or {}, indent=2, ensure_ascii=False)}
+
+FACT-CHECK SOURCES:
+{json.dumps(source_briefs, indent=2, ensure_ascii=False)}
+
+INSTRUCTIONS:
+- Make a reasoned decision (true/false/mixed/uncertain) based on the above.
+- If evidence is thin, keep the tone cautious and say it is unverified/uncertain but mention what was found.
+- Refer to sources generically (e.g., "one BBC article", "multiple outlets") — never number them.
+- Provide clear, actionable messaging for the end user.
+
+Respond ONLY in this JSON format:
+{{
+  "verdict": "true|false|mixed|uncertain",
+  "verified": true|false,
+  "message": "Concise user-facing summary referencing evidence in plain language",
+  "confidence": "high|medium|low",
+  "reasoning": "Brief reasoning trail you followed",
+  "tone": "confident|balanced|cautious"
+}}
+"""
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+
+            if response_text.startswith("```json"):
+                response_text = response_text.replace("```json", "").replace("```", "").strip()
+            elif response_text.startswith("```"):
+                response_text = response_text.replace("```", "").strip()
+
+            final_analysis = json.loads(response_text)
+            final_analysis.setdefault("verdict", "uncertain")
+            final_analysis.setdefault("verified", False)
+            final_analysis.setdefault("message", "Unable to synthesize final verdict.")
+            final_analysis.setdefault("confidence", "low")
+            final_analysis.setdefault("reasoning", "")
+            final_analysis.setdefault("tone", "cautious")
+            final_analysis["analysis_method"] = "hybrid_synthesis"
+
+            return self._build_simple_response(
+                final_analysis,
+                text_input,
+                claim_context,
+                claim_date,
+                search_results,
+                method_label="hybrid_synthesis",
+                extra_details={
+                    "preliminary_analysis": preliminary_analysis,
+                    "curated_analysis": curated_analysis,
+                    "source_highlights": source_briefs,
+                },
+            )
+        except Exception as e:
+            print(f"Hybrid synthesis error: {e}")
+            return None
+
+    def _build_simple_response(
+        self,
+        analysis: Dict[str, Any],
+        text_input: str,
+        claim_context: str,
+        claim_date: str,
+        search_results: List[Dict[str, Any]],
+        method_label: str,
+        extra_details: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        details = {
+            "claim_text": text_input,
+            "claim_context": claim_context,
+            "claim_date": claim_date,
+            "fact_checks": search_results,
+            "analysis": analysis,
+            "verification_method": method_label,
+        }
+        if extra_details:
+            details.update(extra_details)
+
+        return {
+            "verified": analysis.get("verified", False),
+            "verdict": analysis.get("verdict", "uncertain"),
+            "message": analysis.get("message", "No message produced."),
+            "details": details,
+        }

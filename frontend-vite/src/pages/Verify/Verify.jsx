@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, Plus, Search, X } from "lucide-react";
+import { PenSquare, Search } from "lucide-react";
+import logoImg from "../../assets/logo.png";
 import ChatbotView from "./ChatbotView";
 import "./Verify.css";
 
 const Verify = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState([
     { id: 1, title: "New Chat", timestamp: new Date() },
   ]);
   const [activeChatId, setActiveChatId] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
+  const hoverTimeoutRef = useRef(null);
 
   const handleNewChat = () => {
     const newChat = {
@@ -22,86 +23,149 @@ const Verify = () => {
     setActiveChatId(newChat.id);
   };
 
-  const filteredHistory = chatHistory.filter((chat) =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredHistory = useMemo(() => chatHistory, [chatHistory]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex bg-black">
-      {/* Left Sidebar */}
-      <motion.div
-        initial={{ width: sidebarOpen ? 280 : 0 }}
-        animate={{ width: sidebarOpen ? 280 : 0 }}
-        transition={{ duration: 0.3 }}
-        className={`${
-          sidebarOpen ? "border-r border-gray-900" : ""
-        } bg-black flex flex-col overflow-hidden`}
-      >
-        {sidebarOpen && (
-          <>
-            {/* New Chat Button */}
-            <div className="p-4 border-b border-gray-700">
-              <button
-                onClick={handleNewChat}
-                className="w-full flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Chat</span>
-              </button>
-            </div>
-
-            {/* Search Bar */}
-            <div className="p-4 border-b border-gray-700">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search chats..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-black text-white rounded-lg border border-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="h-[calc(100vh-8rem)] bg-black px-3 py-4">
+      <div className="mx-auto flex h-full max-w-8xl overflow-hidden rounded-[16px] border border-white/10 bg-gradient-to-br from-[#07090f] via-[#05070c] to-[#020305] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <motion.aside
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+            }
+            setSidebarOpen(true);
+          }}
+          onMouseLeave={() => {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+            }
+            hoverTimeoutRef.current = setTimeout(() => {
+              setSidebarOpen(false);
+            }, 200);
+          }}
+          initial={{ width: 84 }}
+          animate={{ width: sidebarOpen ? 300 : 84 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="flex h-full flex-col rounded-l-[16px] border-r border-white/5 bg-gradient-to-b from-[#0b111c] via-[#060a13] to-black/80 p-3"
+        >
+          <div className="flex flex-col gap-3">
+            <div className="group grid grid-cols-[36px_1fr] items-center rounded-2xl px-3 py-2 text-xs font-semibold text-gray-300 transition-all duration-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl">
+                <img
+                  src={logoImg}
+                  alt="Project Aegis"
+                  className="h-9 w-9 object-contain"
                 />
+              </div>
+              <div
+                className={`ml-3 origin-left overflow-hidden text-left transition-all duration-200 ease-out ${
+                  sidebarOpen
+                    ? "max-w-[160px] opacity-100 scale-100"
+                    : "max-w-0 opacity-0 scale-95"
+                }`}
+              >
+                <span className="text-sm font-semibold whitespace-nowrap transition-colors duration-200 group-hover:text-white">
+                  Project Aegis
+                </span>
               </div>
             </div>
 
-            {/* Chat History */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {filteredHistory.map((chat) => (
-                <button
-                  key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                    activeChatId === chat.id
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-300 hover:bg-gray-900"
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="flex-1 truncate text-sm">{chat.title}</span>
-                  </div>
-                </button>
-              ))}
+            <div
+              onClick={handleNewChat}
+              className="group grid cursor-pointer grid-cols-[36px_1fr] items-center rounded-2xl px-3 py-2 text-xs font-semibold text-gray-300 transition-all duration-200 hover:text-white"
+              title="New chat"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl">
+                <PenSquare className="h-6 w-6 text-gray-300 transition-colors duration-200 group-hover:text-white" />
+              </div>
+              <div
+                className={`ml-3 origin-left overflow-hidden text-left transition-all duration-200 ease-out ${
+                  sidebarOpen
+                    ? "max-w-[120px] opacity-100 scale-100"
+                    : "max-w-0 opacity-0 scale-95"
+                }`}
+              >
+                <span className="whitespace-nowrap transition-colors duration-200 group-hover:text-white">
+                  New Chat
+                </span>
+              </div>
             </div>
-          </>
-        )}
-      </motion.div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative">
-        {/* Sidebar Toggle Button */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute top-4 left-4 z-10 p-2 bg-gray-800 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-        </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="group grid grid-cols-[36px_1fr] items-center rounded-2xl px-3 py-2 text-xs font-semibold text-gray-300 transition-all duration-200 hover:text-white text-left"
+              title="Search chats"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl">
+                <Search className="h-6 w-6 text-gray-300 transition-colors duration-200 group-hover:text-white" />
+              </div>
+              <div
+                className={`ml-3 origin-left overflow-hidden text-left transition-all duration-200 ease-out ${
+                  sidebarOpen
+                    ? "max-w-[120px] opacity-100 scale-100"
+                    : "max-w-0 opacity-0 scale-95"
+                }`}
+              >
+                <span className="whitespace-nowrap transition-colors duration-200 group-hover:text-white">
+                  Search Chats
+                </span>
+              </div>
+            </button>
+          </div>
 
-        <ChatbotView isDarkMode={true} setIsDarkMode={() => {}} />
+          <motion.div
+            className="my-4 h-px bg-white/10"
+            initial={false}
+            animate={{ width: sidebarOpen ? "100%" : "24px" }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          />
+
+          {sidebarOpen && (
+            <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+              {filteredHistory.map((chat) => {
+                const isActive = activeChatId === chat.id;
+                return (
+                  <button
+                    key={chat.id}
+                    onClick={() => setActiveChatId(chat.id)}
+                    className={`flex w-full items-center rounded-2xl border border-transparent px-3 py-3 text-left text-sm transition ${
+                      isActive
+                        ? "border-blue-500/40 bg-blue-600/20 text-white shadow-inner"
+                        : "text-gray-300 hover:border-white/10 hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <p className="truncate text-sm font-medium">
+                        {chat.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {chat.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </motion.aside>
+
+        <div className="flex-1 overflow-hidden rounded-r-[32px] bg-black/30 backdrop-blur-sm">
+          <ChatbotView isDarkMode={true} setIsDarkMode={() => {}} />
+        </div>
       </div>
     </div>
   );
 };
 
 export default Verify;
-

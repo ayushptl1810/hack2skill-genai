@@ -13,25 +13,25 @@ const ContentSection = ({
 }) => {
   return (
     <MotionCard
-      className="rounded-xl border"
+      className="rounded-3xl border border-white/5 bg-gradient-to-br from-[#11182a]/90 via-[#0d1324]/85 to-[#0b0f1b]/90 p-1"
       isDarkMode={isDarkMode}
-      darkBackgroundColor="#1f2937"
-      lightBackgroundColor="#ffffff"
-      darkBorderColor="#374151"
-      lightBorderColor="#e5e7eb"
+      darkBackgroundColor="#0f172a"
+      lightBackgroundColor="#0f172a"
+      darkBorderColor="#1e293b"
+      lightBorderColor="#1e293b"
       initial={{
         opacity: 0,
         y: 20,
-        backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
+        backgroundColor: "#0f172a",
       }}
       animate={{
         opacity: 1,
         y: 0,
-        backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
+        backgroundColor: "#0f172a",
       }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
     >
-      <div className="p-6">
+      <div className="rounded-[26px] bg-black/40 p-6 sm:p-8">
         <SectionHeader
           title={section.title}
           isExpanded={isExpanded}
@@ -49,10 +49,10 @@ const ContentSection = ({
               className="mt-6 space-y-4"
             >
               <MotionText
-                className="text-base"
+                className="text-base leading-relaxed text-slate-200"
                 isDarkMode={isDarkMode}
-                darkColor="#d1d5db"
-                lightColor="#374151"
+                darkColor="#e2e8f0"
+                lightColor="#0f172a"
               >
                 {section.content}
               </MotionText>
@@ -71,14 +71,14 @@ const ContentSection = ({
                     {section.key_points.map((point, pointIndex) => (
                       <li
                         key={pointIndex}
-                        className="flex items-start space-x-3"
+                        className="flex items-start space-x-3 text-slate-300"
                       >
-                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-emerald-300 mt-0.5 flex-shrink-0" />
                         <MotionText
-                          className="text-sm"
+                          className="text-sm leading-relaxed"
                           isDarkMode={isDarkMode}
-                          darkColor="#d1d5db"
-                          lightColor="#374151"
+                          darkColor="#cbd5f5"
+                          lightColor="#1f2933"
                         >
                           {point}
                         </MotionText>
@@ -103,12 +103,8 @@ const ContentSection = ({
                       (indicator, indicatorIndex) => (
                         <motion.span
                           key={indicatorIndex}
-                          className="px-3 py-1 rounded-full text-sm"
-                          animate={{
-                            backgroundColor: isDarkMode ? "#78350f" : "#fef3c7",
-                            color: isDarkMode ? "#fde68a" : "#92400e",
-                          }}
-                          transition={{ duration: 0.6, ease: "easeInOut" }}
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border border-amber-400/30 bg-amber-400/10 text-amber-200"
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
                         >
                           {indicator}
                         </motion.span>

@@ -11,7 +11,7 @@ class Config:
     SERP_API_KEY: Optional[str] = os.getenv("SERP_API_KEY")
     SERPAPI_BASE_URL: str = "https://serpapi.com/search"
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.1"))
     GEMINI_TOP_P: float = float(os.getenv("GEMINI_TOP_P", "0.8"))
     GEMINI_MAX_TOKENS: int = int(os.getenv("GEMINI_MAX_TOKENS", "1000000"))

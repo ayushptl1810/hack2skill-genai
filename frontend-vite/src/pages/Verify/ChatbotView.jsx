@@ -449,42 +449,6 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
         )}
       </div>
 
-      {/* Recording Banner */}
-      {isRecording && (
-        <div className="px-4 sm:px-6">
-          <div
-            className="mt-2 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-white"
-            style={{ backgroundColor: "#b91c1c" }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-              {recordingPhase === "initializing" && (
-                <div className="text-sm">
-                  <span className="font-medium">Starting…</span>
-                  <span className="opacity-90 ml-2">
-                    first 0.5s can be missed
-                  </span>
-                </div>
-              )}
-              {recordingPhase === "recording" && (
-                <span className="text-sm font-medium">Recording…</span>
-              )}
-              {recordingPhase === "stopping" && (
-                <span className="text-sm font-medium">Processing…</span>
-              )}
-            </div>
-            {recordingPhase === "recording" ? (
-              <span className="text-sm tabular-nums">
-                {String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:
-                {String(recordingSeconds % 60).padStart(2, "0")}
-              </span>
-            ) : (
-              <span className="text-sm"> </span>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* File Preview */}
       {uploadedFiles.length > 0 && (
         <motion.div
@@ -529,19 +493,17 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
 
       {/* Input Area */}
       <motion.div
-        className={`border-t px-4 sm:px-6 py-4 ${
-          isDarkMode ? "border-gray-700" : "border-gray-200"
-        }`}
+        className="border-t border-white/5 px-4 sm:px-8 py-4 backdrop-blur-lg"
         animate={{
-          backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
+          backgroundColor: isDarkMode ? "rgba(6,10,20,0.8)" : "rgba(255,255,255,0.85)",
         }}
         transition={{
           duration: 0.6,
           ease: "easeInOut",
         }}
       >
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="file"
               id="file-upload"
@@ -552,90 +514,94 @@ const ChatbotView = ({ isDarkMode, setIsDarkMode, onLearnClick }) => {
             />
             <motion.label
               htmlFor="file-upload"
-              className="p-2 rounded-lg cursor-pointer"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 transition hover:text-white"
               onClick={() => {
-                // ensure selecting the same file again fires onChange
                 if (fileInputRef.current) fileInputRef.current.value = null;
               }}
-              animate={{
-                color: isDarkMode ? "#9ca3af" : "#6b7280",
-                backgroundColor: "transparent",
-              }}
-              whileHover={{
-                color: isDarkMode ? "#d1d5db" : "#374151",
-                backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
-              }}
-              transition={{
-                duration: 0.6,
-                ease: "easeInOut",
-              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Upload className="w-6 h-6" />
+              <Upload className="h-5 w-5" />
             </motion.label>
             <motion.button
               onClick={isRecording ? stopRecording : startRecording}
-              className={`p-2 rounded-lg ${isRecording ? "text-red-500" : ""}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border ${
+                isRecording
+                  ? "border-red-500/40 bg-red-500/10 text-red-400"
+                  : "border-white/10 bg-white/5 text-gray-400 hover:text-white"
+              } transition`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isRecording ? "Stop recording" : "Start voice note"}
+            >
+              <Mic className={`h-5 w-5 ${isRecording ? "animate-pulse" : ""}`} />
+            </motion.button>
+            {isRecording && (
+              <motion.div
+                className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-xs font-medium ${
+                  isDarkMode
+                    ? "border-red-500/40 bg-red-500/5 text-red-200"
+                    : "border-red-500/40 bg-red-50 text-red-600"
+                }`}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-current animate-pulse" />
+                  {recordingPhase === "initializing" && (
+                    <span>Preparing mic…</span>
+                  )}
+                  {recordingPhase === "recording" && <span>Recording…</span>}
+                  {recordingPhase === "stopping" && <span>Processing…</span>}
+                </div>
+                <span className="font-mono text-[11px]">
+                  {recordingPhase === "recording"
+                    ? `${String(Math.floor(recordingSeconds / 60)).padStart(
+                        2,
+                        "0"
+                      )}:${String(recordingSeconds % 60).padStart(2, "0")}`
+                    : "00:00"}
+                </span>
+              </motion.div>
+            )}
+            <div className="ml-auto hidden items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-400 sm:flex">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Shift + Enter for newline</span>
+            </div>
+          </div>
+
+          <div className="flex items-end gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-950/80 px-3 py-2">
+            <motion.textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me to verify something..."
+              className={`flex-1 resize-none bg-transparent px-3 py-3 text-base focus:outline-none ${
+                isDarkMode ? "text-white placeholder-gray-500" : "text-gray-900 placeholder-gray-500"
+              }`}
+              style={{ minHeight: "56px" }}
               animate={{
-                color: isDarkMode ? "#9ca3af" : "#6b7280",
-                backgroundColor: "transparent",
-              }}
-              whileHover={{
-                color: isDarkMode ? "#d1d5db" : "#374151",
-                backgroundColor: isDarkMode ? "#374151" : "#f3f4f6",
+                color: isDarkMode ? "#ffffff" : "#111827",
               }}
               transition={{
                 duration: 0.6,
                 ease: "easeInOut",
               }}
+              disabled={isRecording}
+            />
+            <motion.button
+              onClick={handleSendMessage}
+              disabled={
+                (!inputValue.trim() && uploadedFiles.length === 0) || isLoading
+              }
+              className="group relative flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 transition disabled:cursor-not-allowed disabled:opacity-50"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
-              <Mic
-                className={`w-6 h-6 ${isRecording ? "animate-pulse" : ""}`}
-              />
+              <Send className="h-4 w-4 transition group-hover:translate-x-0.5" />
+              <span>Send</span>
             </motion.button>
           </div>
-          <motion.textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me to verify something..."
-            className={`flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
-              isDarkMode ? "placeholder-gray-400" : "placeholder-gray-500"
-            }`}
-            style={{ height: "45px", minHeight: "45px" }}
-            animate={{
-              backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-              borderColor: isDarkMode ? "#374151" : "#d1d5db",
-              color: isDarkMode ? "#ffffff" : "#111827",
-            }}
-            transition={{
-              duration: 0.6,
-              ease: "easeInOut",
-            }}
-            disabled={isRecording}
-          />
-          <motion.button
-            onClick={handleSendMessage}
-            disabled={
-              (!inputValue.trim() && uploadedFiles.length === 0) || isLoading
-            }
-            className="px-4 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            style={{ height: "45px" }}
-            animate={{
-              backgroundColor: "#3b82f6",
-            }}
-            whileHover={{
-              backgroundColor: "#2563eb",
-              scale: 1.02,
-            }}
-            whileTap={{ scale: 0.98 }}
-            transition={{
-              duration: 0.6,
-              ease: "easeInOut",
-            }}
-          >
-            <Send className="w-4 h-4" />
-            <span>Send</span>
-          </motion.button>
         </div>
         {recordingError && (
           <div className="mt-2 text-xs text-red-500">{recordingError}</div>
