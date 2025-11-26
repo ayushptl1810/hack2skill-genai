@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, AlertTriangle } from "lucide-react";
 import logo from "../assets/logo.png";
-import RumoursDropdown from "../components/RumoursDropdown";
+import RumoursSidebar from "../components/RumoursSidebar";
 import RumourModal from "../components/RumourModal";
 import { useRumoursFeed } from "../hooks/useRumoursFeed";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [rumoursDropdownOpen, setRumoursDropdownOpen] = useState(false);
+  const [rumoursSidebarOpen, setRumoursSidebarOpen] = useState(false);
   const [selectedRumour, setSelectedRumour] = useState(null);
   const [isRumourModalOpen, setIsRumourModalOpen] = useState(false);
   const location = useLocation();
   const { rumours } = useRumoursFeed();
+
+  useEffect(() => {
+    if (rumoursSidebarOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [rumoursSidebarOpen]);
 
   const navItems = [
     { path: "/", label: "Home" },
@@ -25,7 +37,7 @@ const Navbar = () => {
   const handleRumourClick = (rumour) => {
     setSelectedRumour(rumour);
     setIsRumourModalOpen(true);
-    setRumoursDropdownOpen(false);
+    setRumoursSidebarOpen(false);
   };
 
   return (
@@ -69,7 +81,7 @@ const Navbar = () => {
               {/* Rumours Notification Icon */}
               <div className="relative ml-2">
                 <button
-                  onClick={() => setRumoursDropdownOpen(!rumoursDropdownOpen)}
+                  onClick={() => setRumoursSidebarOpen(!rumoursSidebarOpen)}
                   className="relative p-2 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                 >
                   <AlertTriangle className="w-5 h-5" />
@@ -78,15 +90,7 @@ const Navbar = () => {
                   )}
                 </button>
 
-                <AnimatePresence>
-                  {rumoursDropdownOpen && (
-                    <RumoursDropdown
-                      rumours={rumours}
-                      onRumourClick={handleRumourClick}
-                      onClose={() => setRumoursDropdownOpen(false)}
-                    />
-                  )}
-                </AnimatePresence>
+                {/* sidebar handled outside nav */}
               </div>
 
               {/* Login Button */}
@@ -148,6 +152,28 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </nav>
+
+      {/* Rumours Sidebar */}
+      <AnimatePresence>
+        {rumoursSidebarOpen && (
+          <>
+            <motion.div
+              key="rumour-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black"
+              onClick={() => setRumoursSidebarOpen(false)}
+            />
+            <RumoursSidebar
+              key="rumour-sidebar"
+              rumours={rumours}
+              onRumourClick={handleRumourClick}
+              onClose={() => setRumoursSidebarOpen(false)}
+            />
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Rumour Modal */}
       <RumourModal

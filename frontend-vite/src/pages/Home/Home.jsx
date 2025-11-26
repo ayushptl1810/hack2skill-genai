@@ -2,16 +2,10 @@ import { Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Shield,
   Image,
   Video,
   Mic,
-  CheckCircle,
   FileText,
-  Search,
-  AlertTriangle,
-  Users,
-  Sparkles,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -58,7 +52,6 @@ const Home = () => {
       description: "Upload text, image, video, or audio for verification",
       details:
         "Simply drag and drop your content or paste text directly into our verification interface. Our system accepts multiple file formats and automatically detects the content type for optimal processing.",
-      icon: Search,
     },
     {
       number: "2",
@@ -67,7 +60,6 @@ const Home = () => {
         "Our AI analyzes the content using multiple verification methods",
       details:
         "Advanced machine learning models process your content through multiple verification pipelines simultaneously. This includes deepfake detection, metadata analysis, reverse image/video searches, and pattern recognition algorithms.",
-      icon: Shield,
     },
     {
       number: "3",
@@ -75,7 +67,6 @@ const Home = () => {
       description: "Cross-reference with reliable sources and databases",
       details:
         "Our system cross-references your content against trusted fact-checking databases, academic sources, and verified news outlets. We check for known misinformation patterns and verify claims against authoritative sources in real-time.",
-      icon: CheckCircle,
     },
     {
       number: "4",
@@ -84,7 +75,6 @@ const Home = () => {
         "Receive detailed verification report with confidence scores",
       details:
         "Get comprehensive verification results including confidence scores, source citations, detailed analysis breakdown, and actionable insights. Our reports are transparent, showing exactly how we reached our conclusions.",
-      icon: AlertTriangle,
     },
   ];
 
@@ -356,15 +346,10 @@ const Home = () => {
                   className="flex flex-col items-center text-center"
                 >
                   {/* Title above number */}
-                  <div className="mb-6">
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <div className="bg-blue-600/20 p-2 rounded-lg">
-                        <step.icon className="w-4 h-4 text-blue-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-white">
-                        {step.title}
-                      </h3>
-                    </div>
+                  <div className="mb-6 text-center">
+                    <h3 className="text-lg font-semibold text-white">
+                      {step.title}
+                    </h3>
                   </div>
 
                   {/* Step Number Circle */}
@@ -389,7 +374,7 @@ const Home = () => {
                   </div>
 
                   {/* Content below number */}
-                  <div className="bg-black border border-gray-800 rounded-lg p-4 hover:border-blue-500 transition-colors w-full mt-2">
+                  <div className="bg-black border border-gray-800 rounded-lg p-4 hover:border-blue-500 transition-colors w-full mt-6">
                     <p className="text-gray-400 text-sm mb-2 font-medium">
                       {step.description}
                     </p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./layouts/Navbar";
 import Footer from "./layouts/Footer";
 import Home from "./pages/Home/Home";
@@ -12,6 +12,8 @@ import "./App.css";
 
 function App() {
   const [isDarkMode] = useState(true); // Always dark theme
+  const location = useLocation();
+  const footerHiddenRoutes = new Set(["/verify"]);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -32,7 +34,7 @@ function App() {
           <Route path="/subscription" element={<Subscription />} />
         </Routes>
       </main>
-      <Footer />
+      {!footerHiddenRoutes.has(location.pathname) && <Footer />}
     </div>
   );
 }

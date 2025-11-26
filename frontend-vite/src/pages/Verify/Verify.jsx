@@ -34,8 +34,8 @@ const Verify = () => {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-8rem)] bg-black px-3 py-4">
-      <div className="mx-auto flex h-full max-w-8xl overflow-hidden rounded-[16px] border border-white/10 bg-gradient-to-br from-[#07090f] via-[#05070c] to-[#020305] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+    <div className="h-[calc(100vh-4rem)] bg-black">
+      <div className="flex h-full w-full overflow-hidden">
         <motion.aside
           onMouseEnter={() => {
             if (hoverTimeoutRef.current) {
@@ -54,7 +54,7 @@ const Verify = () => {
           initial={{ width: 84 }}
           animate={{ width: sidebarOpen ? 300 : 84 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="flex h-full flex-col rounded-l-[16px] border-r border-white/5 bg-gradient-to-b from-[#0b111c] via-[#060a13] to-black/80 p-3"
+          className="flex h-full flex-col border-r border-white/5 bg-gradient-to-b from-[#0b111c] via-[#060a13] to-black/80 p-3"
         >
           <div className="flex flex-col gap-3">
             <div className="group grid grid-cols-[36px_1fr] items-center rounded-2xl px-3 py-2 text-xs font-semibold text-gray-300 transition-all duration-200">
@@ -160,7 +160,7 @@ const Verify = () => {
           )}
         </motion.aside>
 
-        <div className="flex-1 overflow-hidden rounded-r-[32px] bg-black/30 backdrop-blur-sm">
+        <div className="flex-1 overflow-hidden bg-black/30 backdrop-blur-sm">
           <ChatbotView isDarkMode={true} setIsDarkMode={() => {}} />
         </div>
       </div>
